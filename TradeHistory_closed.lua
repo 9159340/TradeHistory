@@ -102,9 +102,24 @@ function ClosedPos:addRowFromFIFO_close(sqliteRow)
 	--вспомогательные. на форме не видны. нужны для расчета прибыли по закрытым позициям на фортс
 	self.t:SetValue(row, 'close_price_step', sqliteRow.close_price_step)
 	self.t:SetValue(row, 'close_price_step_price', sqliteRow.close_price_step_price)
-	--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! RECALC
-	recalc:recalcPosition(self.t, row, true)
 
+
+	--покажем тип опциона
+	local optionType = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'optiontype')
+	if optionType ~= nil then
+		optionType = optionType.param_image
+	else
+		optionType = ''
+	end
+	
+	self.t:SetValue(row, 'optionType', optionType)
+	
+	--+--------------------------
+	--| RECALC
+	--+--------------------------
+	
+	recalc:recalcPosition(self.t, row, true)
+	
 end
 
 --добавляет все закрытые позиции в таблицу робота

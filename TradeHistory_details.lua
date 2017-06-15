@@ -119,6 +119,16 @@ function Details:addRowFromFIFO(sqliteRow)
 		local SEC_FACE_VALUE = tonumber(getParamEx (sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'sec_face_value').param_value)
 		self.t[self.key]:SetValue(row, 'amount', tostring(SEC_FACE_VALUE * sqliteRow.qty * sqliteRow.price / 100))
 	end      
+	
+	--покажем тип опциона
+	local optionType = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'optiontype')
+	if optionType ~= nil then
+		optionType = optionType.param_image
+	else
+		optionType = ''
+	end
+	
+	self.t[self.key]:SetValue(row, 'optionType', optionType)	
 end
 
 --добавляет все открытые позиции в таблицу робота

@@ -67,6 +67,9 @@ function MainTable:createTable(caption)
   t:AddColumn("depo",    QTABLE_CACHED_STRING_TYPE, self:col_vis("depo"))  
   t:AddColumn("comment",    QTABLE_STRING_TYPE, self:col_vis("comment")) 
   t:AddColumn("secCode",    QTABLE_CACHED_STRING_TYPE, self:col_vis("secCode"))  
+  
+  t:AddColumn("optionType",    QTABLE_CACHED_STRING_TYPE, self:col_vis("optionType"))
+  
   t:AddColumn("classCode",  QTABLE_CACHED_STRING_TYPE, self:col_vis("classCode"))  
   t:AddColumn("lot",  		 QTABLE_INT_TYPE, self:col_vis("lot"))
   
@@ -108,12 +111,14 @@ function MainTable:createTable(caption)
   t:AddColumn("close_price_step_price",    QTABLE_DOUBLE_TYPE, self:col_vis("close_price_step_price"))   
 
   --collateral
-  t:AddColumn("buyDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("buyDepo"))	--for buyer (amount)
-  t:AddColumn("sellDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("sellDepo"))	--for seller (amount)
+  t:AddColumn("buyDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("buyDepo"))	--for seller (amount)
+  t:AddColumn("sellDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("sellDepo"))	--for buyer (amount)
   
   --fur debug - shows time of last update the row
   t:AddColumn("timeUpdate",  QTABLE_STRING_TYPE, self:col_vis("timeUpdate"))     
 
+  
+  
   t:SetCaption(caption)
   
   return t

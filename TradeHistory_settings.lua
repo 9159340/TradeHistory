@@ -40,6 +40,8 @@ function Settings:Init()
   self.columns_visibility["buyDepo"]=true
   self.columns_visibility["sellDepo"]=false
   self.columns_visibility["timeUpdate"]=false
+  self.columns_visibility["optionType"]=true
+ 
 
 --	настройка ширины колонок
 
@@ -75,7 +77,7 @@ function Settings:Init()
 	self.columns_width['buyDepo'] = 9
 	self.columns_width['sellDepo'] = 7
 	self.columns_width['timeUpdate'] = 7
-  
+	self.columns_width['optionType'] = 5
 
 
 end

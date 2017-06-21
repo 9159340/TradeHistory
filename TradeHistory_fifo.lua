@@ -435,7 +435,7 @@ end
 лучше все приводить к TOM, потому что там ликвидность выше
 --]]
 function substitute_sec_code(sec_code)
-	if sec_code == 'USDRUB_TOD' then
+	if sec_code == 'USD000000TOD' then
 		return 'USD000UTSTOM'
 	else
 		return sec_code

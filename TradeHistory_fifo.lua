@@ -128,12 +128,15 @@ function FIFO:what_is_the_direction(trade)
 end
 
 
---гасим короткие позиции
+--[[уменьшить короткую позицию
+--]]
 function FIFO:decrease_short(trade)
 
-	  local comment = self:get_deal_comment(trade.brokerref)
-		
-      local restShort = self:getRestsFIFO(trade.client_code, trade.sec_code, trade.class_code, comment, 1)
+	local comment = self:get_deal_comment(trade.brokerref)
+	
+	local sec_code = substitute_sec_code(trade.sec_code)
+	
+    local restShort = self:getRestsFIFO(trade.client_code, sec_code, trade.class_code, comment, 1)
       
       --количество из сделки, на которое можно закрыть шорты
       
@@ -213,17 +216,19 @@ function FIFO:decrease_short(trade)
   return qty
 end
 
-
---открывает длинную позицию
---параметры
---	db - in - соединение с базой
---	trade - in - сделка
---	qty - in - number - оставшееся после закрытия шортов количество из сделки, на которое нужно открыть лонг.
+--[[открыть или увеличить длинную позицию
+параметры
+	db - in - соединение с базой
+	trade - in - сделка
+	qty - in - number - оставшееся после закрытия шортов количество из сделки, на которое нужно открыть лонг.
+--]]
 function FIFO:increase_long(trade, qty)
 
     local k="'"
 
 	local mult = self:get_mult(trade.sec_code, trade.class_code)
+	
+	local sec_code = substitute_sec_code(trade.sec_code)
 	
 	local comment = self:get_deal_comment(trade.brokerref)
 	
@@ -246,7 +251,7 @@ function FIFO:increase_long(trade, qty)
       --измерения
       k..trade.client_code      ..k..','..--  Код клиента
 	  k..trade.account      ..k..','..--  Код депо
-      k..trade.sec_code         ..k..','..--  Код бумаги заявки  
+      k..sec_code         ..k..','..--  Код бумаги заявки  
       k..trade.class_code       ..k..','..--  Код класса  
       trade.trade_num           ..','.. --  Номер сделки в торговой системе 
       k..comment 		        ..k..' ,'..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
@@ -263,15 +268,15 @@ function FIFO:increase_long(trade, qty)
       trade.accruedint          ..','..--  Накопленный купонный доход
       k..trans_id..k      		..','..--  Идентификатор транзакции
       trade.order_num           ..','..--  Номер заявки в торговой системе  
-      getParamEx (trade.class_code, trade.sec_code, 'LOTSIZE').param_value  ..','..  
+      getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value  ..','..  
       trade.exchange_comission  ..--  Комиссия Фондовой биржи (ММВБ)  
       ');'          
                  
     self.db:exec(sql)  
 end
 
-
---уменьшить длинную позицию
+--[[уменьшить длинную позицию
+--]]
 function FIFO:decrease_long(trade)
 --алгоритм
 --получает таблицу остатков длинных позиций
@@ -282,11 +287,13 @@ function FIFO:decrease_long(trade)
 
   local comment = self:get_deal_comment(trade.brokerref)
   
+  local sec_code = substitute_sec_code(trade.sec_code)
+  
   --таблица остатков длинных позиций
-  local restLong = self:getRestsFIFO(trade.client_code, trade.sec_code, trade.class_code, comment, 0)
+  local restLong = self:getRestsFIFO(trade.client_code, sec_code, trade.class_code, comment, 0)
   
   --количество из сделки, на которое можно закрыть лонги
-  --local qty = trade.qty * what_is_the_multiplier(trade.class_code, trade.sec_code)
+  --local qty = trade.qty * what_is_the_multiplier(trade.class_code, sec_code)
   local qty = trade.qty
   
   --счетчик цикла по остаткам из регистра
@@ -347,8 +354,8 @@ function FIFO:decrease_long(trade)
               qty_decreased*trade.value/trade.qty..','..
 			  
 			  
-              getParamEx (trade.class_code, trade.sec_code, 'SEC_PRICE_STEP').param_value..','..
-              getParamEx (trade.class_code, trade.sec_code, 'STEPPRICE').param_value..
+              getParamEx (trade.class_code, sec_code, 'SEC_PRICE_STEP').param_value..','..
+              getParamEx (trade.class_code, sec_code, 'STEPPRICE').param_value..
                
               ');'          
       --message(sql)                     
@@ -366,13 +373,15 @@ function FIFO:decrease_long(trade)
   
 end
 
-
-
+--[[открыть или увеличить короткую позицию
+--]]
 function FIFO:increase_short(trade, qty)
 
     local k="'"
     
 	local mult = self:get_mult(trade.sec_code, trade.class_code)
+	
+	local sec_code = substitute_sec_code(trade.sec_code)
 	
 	local comment = self:get_deal_comment(trade.brokerref)
 	
@@ -395,7 +404,7 @@ function FIFO:increase_short(trade, qty)
             --измерения
             k..trade.client_code      ..k..','..--  Код клиента
 			k..trade.account      ..k..','..--  Код депо
-            k..trade.sec_code         ..k..','..--  Код бумаги заявки  
+            k..sec_code         ..k..','..--  Код бумаги заявки  
             k..trade.class_code       ..k..','..--  Код класса  
             trade.trade_num           ..','.. --  Номер сделки в торговой системе 
             k..comment		          ..k..' ,'..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
@@ -412,13 +421,25 @@ function FIFO:increase_short(trade, qty)
             trade.accruedint          ..','..	--  Накопленный купонный доход
             k..trans_id..k      	  ..','..	--  Идентификатор транзакции
             trade.order_num           ..','..	--  Номер заявки в торговой системе  
-            getParamEx (trade.class_code, trade.sec_code, 'LOTSIZE').param_value ..','..  
+            getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value ..','..  
             trade.exchange_comission  ..		--  Комиссия Фондовой биржи (ММВБ)  
             ');'          
                        
      self.db:exec(sql)  
         
   
+end
+
+--[[заменить код бумаги
+это требуется, например, на валютном рынке, когда позиция у нас в этом скрипте ведется в TOM, а продаем/покупаем мы TOD.
+лучше все приводить к TOM, потому что там ликвидность выше
+--]]
+function substitute_sec_code(sec_code)
+	if sec_code == 'USDRUB_TOD' then
+		return 'USD000UTSTOM'
+	else
+		return sec_code
+	end
 end
 
 --проводит сделку по ФИФО

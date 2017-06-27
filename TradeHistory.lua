@@ -159,29 +159,136 @@ function load_OPEN_Positions()
   --first version
   --local vt = fifo:readOpenFifoPositions() --module TradeHistory_FIFO.lua
   
-	local vt, forts_totals = fifo:readOpenFifoPositions_ver2() --module TradeHistory_FIFO.lua
+  --если в настройках включено self.groupByClass = true , т.е. группировать строки в главной таблице по классам инструментов
+  --то надо пока сделать 3 класса SPBFUT, SPBOPT, TQBR
+  --потом нужно доделать получение всех классов из бумаг, которые есть на позиции и в цикле по этим классам вывод строк
+ 
+	local newRow = nil
+	
+	if settings.groupByClass  == true then
+	
+		
+		
+		--+----------------------+
+		--|			TQBR				|
+		--+----------------------+		
 
-	local r_count = 1
+		if settings.filter_by_class['TQBR']==true then
+		
+			--добавим пустую строку как разделитель
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "TQBR")
+		
+			local total_profit = 0
+			
+			local r_count = 1
+			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'TQBR', nil, false)
+			while r_count <= table.maxn(vt) do
+				addRowFromFIFO(vt[r_count])
+				r_count = r_count + 1 
+				
+			end 
+			--выведем итоговую строку с прибылью
+			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
+			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "total")
+		
+			--добавим пустую строку как разделитель
+			newRow = maintable.t:AddLine()
+			
+		end
+		
+		--+----------------------+
+		--|			SPBFUT			|
+		--+----------------------+
+		
+		if settings.filter_by_class['SPBFUT']==true then
+			
+			--добавим заголовок блока
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "SPBFUT")
+	  
+			local r_count = 1
+			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'SPBFUT', nil, false)
+			while r_count <= table.maxn(vt) do
+				addRowFromFIFO(vt[r_count])
+				r_count = r_count + 1 
+			end 
+			--выведем итоговую строку с прибылью
+			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
+			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "total")
 
-	while r_count <= table.maxn(vt) do
-		addRowFromFIFO(vt[r_count])
-		r_count = r_count + 1 
-	end 
+			--добавим строку с общим ГО
+			showTotalCollateralOnForts(forts_totals)
+		
+			--добавлять пустую строку не надо, т.к. есть строка с коллатералом
+		end
+		
+		--+----------------------+
+		--|			SPBOPT			|
+		--+----------------------+
+		
+		if settings.filter_by_class['SPBOPT']==true then
+			
+			--добавим заголовок блока строк
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "SPBOPT")
+		  
+			local r_count = 1
+			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'SPBOPT', nil, false)
+			while r_count <= table.maxn(vt) do
+				addRowFromFIFO(vt[r_count])
+				r_count = r_count + 1 
+			end
+			--выведем итоговую строку с прибылью
+			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
+			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
+			local newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "total")
 
-	--show total collateral on forts
+			--добавим строку с общим ГО
+			showTotalCollateralOnForts(forts_totals)
+			
+			--добавлять пустую строку не надо, т.к. здесь таблица заканчивается
+		end
+
+	else
+	  
+		local vt, forts_totals = fifo:readOpenFifoPositions_ver2() --module TradeHistory_FIFO.lua
+
+		local r_count = 1
+
+		while r_count <= table.maxn(vt) do
+			addRowFromFIFO(vt[r_count])
+			r_count = r_count + 1 
+		end 
+		
+		--добавим строку с общим ГО
+		showTotalCollateralOnForts(forts_totals)
+			
+	end
+
+
+end
+
+--добавляет в главную таблицу строку с итогом по ГО на фортс (только для покупателя)
+--forts_totals - таблица с общим ГО, там одна строка
+function showTotalCollateralOnForts(forts_totals)
+			
 	if settings.show_total_collateral_on_forts == true then
 		for k, v in pairs(forts_totals) do
 			if v~= nil and v ~= 0 and v~='' then
 				local row = maintable.t:AddLine()
 				maintable.t:SetValue(row, 'account', k)
 				maintable.t:SetValue(row, 'buyDepo', v)
-				--maintable.t:SetValue(row, 'dateOpen', nil)
-				--maintable.t:SetValue(row, 'dateClose', nil)
 			end
 		end
-	end	
-end
+	end			
 
+end
 
 
 -- обработчики событий ----

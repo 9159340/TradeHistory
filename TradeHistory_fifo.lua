@@ -751,19 +751,24 @@ end
 ]]
   
   --set up the parameters
-	if sec_code ~= nil and
-	class_code ~= nil and
-	account ~= nil then
-	
-		sql = string.gsub(sql, '&dim_client_code', 'AND dim_client_code = '..k..account..k..'')
+	if sec_code ~= nil then
 		sql = string.gsub(sql, '&dim_sec_code', 'AND dim_sec_code = '..k..sec_code..k..'')
+	else
+		sql = string.gsub(sql, '&dim_sec_code', '')
+	end  
+	
+	if 	class_code ~= nil then
 		sql = string.gsub(sql, '&dim_class_code', 'AND dim_class_code = '..k..class_code..k..'')
 	else
-		sql = string.gsub(sql, '&dim_client_code', '')
-		sql = string.gsub(sql, '&dim_sec_code', '')
 		sql = string.gsub(sql, '&dim_class_code', '')
-	
 	end  
+
+	if account ~= nil then
+		sql = string.gsub(sql, '&dim_client_code', 'AND dim_client_code = '..k..account..k..'')
+	else
+		sql = string.gsub(sql, '&dim_client_code', '')
+	end  
+	
 
     --замена таблицы (лонг на шорт)
 	if isShort == 1 or isShort == true then

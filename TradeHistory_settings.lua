@@ -2,6 +2,16 @@ Settings = class(function(acc)
 end)
 function Settings:Init()
 
+	--группировка позиций по классам бумаг
+	self.groupByClass = true
+	
+	--фильтр по классам бумаг. например, акции на споте не интересно выводить в спекулятивную таблицу
+	--фильтр пока будет работать только вместе с группировкой по классам
+	self.filter_by_class = {}
+	self.filter_by_class['SPBFUT']=true
+	self.filter_by_class['SPBOPT']=true
+	self.filter_by_class['TQBR']=false
+	
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	
 	self.dark_theme = true

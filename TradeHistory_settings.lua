@@ -11,6 +11,7 @@ function Settings:Init()
 	self.filter_by_class['SPBFUT']=true
 	self.filter_by_class['SPBOPT']=true
 	self.filter_by_class['TQBR']=false
+	self.filter_by_class['CETS']=false
 	
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	

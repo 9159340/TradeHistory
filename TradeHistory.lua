@@ -200,6 +200,36 @@ function load_OPEN_Positions()
 		end
 		
 		--+----------------------+
+		--|			CETS				|
+		--+----------------------+		
+
+		if settings.filter_by_class['CETS']==true then
+		
+			--добавим пустую строку как разделитель
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "CETS")
+		
+			local total_profit = 0
+			
+			local r_count = 1
+			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'CETS', nil, false)
+			while r_count <= table.maxn(vt) do
+				addRowFromFIFO(vt[r_count])
+				r_count = r_count + 1 
+				
+			end 
+			--выведем итоговую строку с прибылью
+			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
+			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', "total")
+		
+			--добавим пустую строку как разделитель
+			newRow = maintable.t:AddLine()
+			
+		end
+		
+		--+----------------------+
 		--|			SPBFUT			|
 		--+----------------------+
 		

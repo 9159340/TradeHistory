@@ -7,11 +7,16 @@ function Settings:Init()
 	
 	--фильтр по классам бумаг. например, акции на споте не интересно выводить в спекулятивную таблицу
 	--фильтр пока будет работать только вместе с группировкой по классам
+	--значение элемента - бул - определяет видимость позиций
 	self.filter_by_class = {}
 	self.filter_by_class['SPBFUT']=true
 	self.filter_by_class['SPBOPT']=true
-	self.filter_by_class['TQBR']=false
+	self.filter_by_class['TQBR']=false --акции
+	self.filter_by_class['EQOB']=false --корп облигации
+	self.filter_by_class['TQOB']=false --ОФЗ
+	self.filter_by_class['TQDE']=false --дефолтные акции (трансаэро)
 	self.filter_by_class['CETS']=false
+	self.filter_by_class['TQTF']=false --ETF
 	
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	

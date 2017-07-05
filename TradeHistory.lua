@@ -139,6 +139,9 @@ end
 --загружает позиции из sqlite
 function load_OPEN_Positions()
 
+	maintable:clearTable()
+	
+	
   --открытые позиции
   
   local r = maintable.t:AddLine()
@@ -167,122 +170,34 @@ function load_OPEN_Positions()
 	
 	if settings.groupByClass  == true then
 	
-		
-		
-		--+----------------------+
-		--|			TQBR				|
-		--+----------------------+		
-
-		if settings.filter_by_class['TQBR']==true then
-		
-			--добавим пустую строку как разделитель
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "TQBR")
-		
-			local total_profit = 0
+		--сделаем универсально. читаем таблицу с настройками отображения класса и выводим позиции в зависимости от значения параметра (видимость)
+		for k,v in pairs(settings.filter_by_class) do
 			
-			local r_count = 1
-			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'TQBR', nil, false)
-			while r_count <= table.maxn(vt) do
-				addRowFromFIFO(vt[r_count])
-				r_count = r_count + 1 
+			newRow = maintable.t:AddLine()
+			maintable.t:SetValue(newRow, 'secCode', k)--добавляем строку с именем класса (ключ таблицы)
+			--newRow = maintable.t:AddLine() --delimiter
+			
+			--проверим настройку. если Истина - показываем позиции
+			if v == true then
+				local total_profit = 0
 				
-			end 
-			--выведем итоговую строку с прибылью
-			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
-			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "total")
-		
-			--добавим пустую строку как разделитель
-			newRow = maintable.t:AddLine()
+				local r_count = 1
+				local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, k, nil, false)
+				while r_count <= table.maxn(vt) do
+					addRowFromFIFO(vt[r_count])
+					r_count = r_count + 1 
+					
+				end 
+				--выведем итоговую строку с прибылью
+				--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
+				--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
+				newRow = maintable.t:AddLine()
+				maintable.t:SetValue(newRow, 'secCode', "total")
 			
-		end
-		
-		--+----------------------+
-		--|			CETS				|
-		--+----------------------+		
-
-		if settings.filter_by_class['CETS']==true then
-		
-			--добавим пустую строку как разделитель
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "CETS")
-		
-			local total_profit = 0
-			
-			local r_count = 1
-			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'CETS', nil, false)
-			while r_count <= table.maxn(vt) do
-				addRowFromFIFO(vt[r_count])
-				r_count = r_count + 1 
-				
-			end 
-			--выведем итоговую строку с прибылью
-			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
-			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "total")
-		
-			--добавим пустую строку как разделитель
-			newRow = maintable.t:AddLine()
-			
-		end
-		
-		--+----------------------+
-		--|			SPBFUT			|
-		--+----------------------+
-		
-		if settings.filter_by_class['SPBFUT']==true then
-			
-			--добавим заголовок блока
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "SPBFUT")
-	  
-			local r_count = 1
-			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'SPBFUT', nil, false)
-			while r_count <= table.maxn(vt) do
-				addRowFromFIFO(vt[r_count])
-				r_count = r_count + 1 
-			end 
-			--выведем итоговую строку с прибылью
-			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
-			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "total")
-
-			--добавим строку с общим ГО
-			showTotalCollateralOnForts(forts_totals)
-		
-			--добавлять пустую строку не надо, т.к. есть строка с коллатералом
-		end
-		
-		--+----------------------+
-		--|			SPBOPT			|
-		--+----------------------+
-		
-		if settings.filter_by_class['SPBOPT']==true then
-			
-			--добавим заголовок блока строк
-			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "SPBOPT")
-		  
-			local r_count = 1
-			local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, 'SPBOPT', nil, false)
-			while r_count <= table.maxn(vt) do
-				addRowFromFIFO(vt[r_count])
-				r_count = r_count + 1 
+				--добавим пустую строку как разделитель
+				newRow = maintable.t:AddLine()
 			end
-			--выведем итоговую строку с прибылью
-			--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
-			--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
-			local newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', "total")
-
-			--добавим строку с общим ГО
-			showTotalCollateralOnForts(forts_totals)
 			
-			--добавлять пустую строку не надо, т.к. здесь таблица заканчивается
 		end
 
 	else
@@ -413,7 +328,7 @@ function OnTrade(trade)
 	end
 
   --refill robot's table	
-	maintable:clearTable()
+	
 	
 	load_OPEN_Positions()
 	
@@ -554,14 +469,16 @@ local f_cb = function( t_id,  msg,  par1, par2)
 		end
 
 		--если щелкнули на строку OPEN POSITIONS - нужно показать закрытые позиции
-		if maintable.t:GetValue(par1,'dateOpen').image == 'OPEN'
-			and maintable.t:GetValue(par1,'timeOpen').image == 'POSITIONS' then
+		if 
+			maintable.t:GetValue(par1,'profitpt').image == 'CLOSED'
+			and maintable.t:GetValue(par1,'profit %').image == 'POSITIONS' then
 			
 			closedpos:load()
 			
 			--чтобы можно было закрыть окно с таблицей - повесим на него обработчик колбэков
 			SetTableNotificationCallback (closedpos.t.t_id, f_cb_closed)
 			
+	
 		else
 		
 			details.sec_code    = maintable.t:GetValue(par1,'secCode').image
@@ -575,6 +492,37 @@ local f_cb = function( t_id,  msg,  par1, par2)
 			--чтобы можно было закрыть окно с таблицей - повесим на него обработчик колбэков
 			SetTableNotificationCallback (details.t[details.key].t_id, f_cb_details)
 			
+		end
+	
+	elseif msg==QTABLE_LBUTTONUP then
+		
+		--при отжатии левой кнопки мыши в строке с именем класса будет происходить скрытие/отображение позиций этого класса
+		
+		local class_code = maintable.t:GetValue(par1,'secCode').image
+		if class_code == 'TQBR' 
+		or class_code == 'CETS'
+		or class_code == 'SPBFUT'
+		or class_code == 'SPBOPT'
+		or class_code == 'EQOB'
+		or class_code == 'TQOB'
+		or class_code == 'TQDE'
+		or class_code == 'TQTF'
+		or class_code == 'TQBR'
+		or class_code == 'TQBR'
+		or class_code == 'TQBR'
+		or class_code == 'TQBR'
+		or class_code == 'TQBR'
+		or class_code == 'TQBR'
+		then
+			--по щелчку на имя класса будем сворачивать и разворачивать открытые позиции в этом классе
+			if settings.filter_by_class[class_code] == false then
+				settings.filter_by_class[class_code] = true
+				
+			elseif settings.filter_by_class[class_code] == true then
+				settings.filter_by_class[class_code] = false
+				
+			end
+			load_OPEN_Positions()
 		end
 		
 	elseif msg==QTABLE_VKEY then

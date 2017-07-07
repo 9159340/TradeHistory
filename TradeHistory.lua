@@ -141,7 +141,6 @@ function load_OPEN_Positions()
 
 	maintable:clearTable()
 	
-	
   --открытые позиции
   
   local r = maintable.t:AddLine()
@@ -156,7 +155,7 @@ function load_OPEN_Positions()
   maintable.t:SetValue(r, 'qtyClose', "show")
   maintable.t:SetValue(r, 'profitpt', "CLOSED")
   maintable.t:SetValue(r, 'profit %', "POSITIONS")
-
+  colorizer:colorize_class(maintable.t, r)
   --get the table with positions from fifo
   
   --first version
@@ -175,6 +174,11 @@ function load_OPEN_Positions()
 			
 			newRow = maintable.t:AddLine()
 			maintable.t:SetValue(newRow, 'secCode', k)--добавляем строку с именем класса (ключ таблицы)
+			colorizer:colorize_class(maintable.t, newRow)
+			
+			  
+			--SetColor(maintable.t.t_id, newRow, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)					
+			
 			--newRow = maintable.t:AddLine() --delimiter
 			
 			--проверим настройку. если Истина - показываем позиции

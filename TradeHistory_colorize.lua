@@ -62,3 +62,22 @@ function Colorizer:colorize_row(t, row, PnL)
 	end
 	
 end
+
+--устанавливает цвет фона в строке с названием класса
+function Colorizer:colorize_class(t, row)
+
+	if settings.dark_theme then
+		
+		local b_color = RGB(27, 27, 27)         --background color
+		local sel_b_color = RGB(50, 50, 50)     --background color in selected row
+		  
+		local f_color     = RGB(190, 190, 220)      --font color in unselected row
+		local sel_f_color = f_color --RGB(230, 100, 100) 		  
+		
+		SetColor(t.t_id, row, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)		
+		
+	else
+		--self:colorize_row_light_theme(t, row, PnL)
+	end
+	
+end

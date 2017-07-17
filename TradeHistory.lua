@@ -26,7 +26,16 @@ dofile (getScriptPath() .. "\\TradeHistory_details.lua")
 dofile (getScriptPath() .. "\\TradeHistory_table.lua") --class maintable
 dofile (getScriptPath() .. "\\TradeHistory_closed.lua")
 dofile (getScriptPath() .. "\\TradeHistory_deals.lua")
+
+--эмул€ци€ контекстного меню
 dofile (getScriptPath() .. "\\TradeHistory_actions.lua")
+--это ид таблицы контекстного меню, которую нужно закрыть
+--такой прием нужен дл€ того, чтобы обойти ограничений платформы:
+--"нельз€ вызывать DestroyTable из функции обработки событий этой же таблицы"!
+--чтобы окно меню закрывалось быстро, нужно указывать маленькую паузу в главном цикле.
+id_context_to_kill = nil
+--эмул€ци€ контекстного меню  ќЌ≈÷
+
 
 --[[
 читаем позиции из sqlite, выводим их цену и считаем PnL по текущей котировке
@@ -378,7 +387,8 @@ end
 local f_cb_cntx = function( t_id,  msg,  par1, par2)
   
 	if (msg==QTABLE_CLOSE)  then
-		DestroyTable(t_id)
+		--DestroyTable(t_id)
+		actions:kill()
 	end
 
 	x=GetCell(t_id, par1, par2) 
@@ -389,30 +399,32 @@ local f_cb_cntx = function( t_id,  msg,  par1, par2)
 
 		local action = x["image"]
 		
-		--после выбора пункта меню нужно закрыть таблицу
-		DestroyTable(t_id)
-		
 		--обработаем выбранное действие
-		
-		resultTable = actions:executeAction(action)
+		actions:executeAction(action)
 		
 		--далее идет втора€ часть кода обработки событи€. ќднако, не всегда это необходимо. ѕерва€ часть - в файле TradeHistory_actions.lua, функци€ function Actions:executeAction(action)
-		
-		if action == 'Show details' and resultTable['details_t_id'] ~= nil then
+		if action == 'Show details' and actions.resultTable ~= nil and actions.resultTable['details_t_id'] ~= nil then
 		
 			--дл€ этого действи€ мы точно знаем, что функци€ вернет поле resultTable['details_t_id'], в котором будет лежать идентификатор (число) таблицы детализации позиции
 			--повесим колбэк, чтобы таблица детальных записей закрывалась по ESC. к сожаление, это можно сделать только в главном скрипте, т.е. здесь.
 			--в классе Actions вызов SetTableNotificationCallback (resultTable['details_t_id'], f_cb_details) не дает нужного эффекта, что, в общем-то, логично.
 			
-			SetTableNotificationCallback (resultTable['details_t_id'], f_cb_details)		
+			SetTableNotificationCallback (actions.resultTable['details_t_id'], f_cb_details)		
 			
 		end		
 		
+		--после выбора пункта меню нужно закрыть таблицу
+		--так делать нельз€!
+		--DestroyTable(t_id)
+		--actions:kill()
+		--поэтому пойдем в основной цикле
+		id_context_to_kill = t_id
 		
 	elseif msg==QTABLE_VKEY then
 		--message(par2)
 		if par2 == 27 then -- esc
-			DestroyTable(t_id)
+			--DestroyTable(t_id)
+			actions:kill()
 		end
 		--par2 = 13 - enter
 	end  
@@ -579,6 +591,11 @@ function main()
     maintable:recalc_table(maintable.t)
     --обновим PnL во всех открытых детальных таблицах
 	recalc_details()
+	--Ёмул€ци€ контекстного меню
+	if id_context_to_kill ~= nil then
+		actions:kill(id_context_to_kill)
+		id_context_to_kill = nil
+	end
     sleep(1000)
   end
   

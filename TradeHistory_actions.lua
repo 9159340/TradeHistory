@@ -21,6 +21,8 @@ function Actions:Init()
  
  	details= Details()
 	details:Init()
+	
+	self.resultTable = nil
 end
 
 
@@ -66,11 +68,20 @@ end
 
 --создает собственный экземпляр таблицы класса, не глобальный
 function Actions:createOwnTable()
-	local t = self:createTable()
-	self.t = t
+
+	self.t = self:createTable()
 	
 end
 
+function Actions:kill(t_id)
+
+	if t_id~=nil then
+		DestroyTable(t_id)
+	else
+		DestroyTable(self.t.t_id)
+	end
+  
+end
 
 function Actions:addActions()
 
@@ -125,7 +136,7 @@ end
 function Actions:executeAction(action)
 
 	--будем возвращать таблицу, для каждого действия там будут свои поля, которые будем проверять в месте вызова данной функции
-	local resultTable = {}
+	self.resultTable = {}
 
 	--message(action)
 	if action == 'Show details' then
@@ -140,22 +151,22 @@ function Actions:executeAction(action)
 		recalc_details()
 		
 		--на этот t_id снаружи повесим колбэк, чтобы по ESC можно было закрыть
-		resultTable['details_t_id'] = details.t[details.key].t_id
+		self.resultTable['details_t_id'] = details.t[details.key].t_id
 	
 	elseif action == 'Show trades of current session' then
 	
 		local res = self:ShowTradesOfCurrentSession()
 		
 		--в таблице res должно быть поле с ИД таблицы. на нее нужно повесить колбэк
-		resultTable['trades_t_id'] = res['t_id']
+		self.resultTable['trades_t_id'] = res['t_id']
 		
 	else
 	
-		message('DUMMY. This action is being under construction')
+		--message('DUMMY. This action is being under construction')
 		
 	end
 	
-	return resultTable
+	
 
 end
 

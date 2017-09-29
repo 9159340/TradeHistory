@@ -8,6 +8,8 @@
 --
 --2. 
 
+--trades[ 11 ] ['flags'] = 64 --покупка
+--trades[ 11 ] ['flags'] = 68 --продажа
 
 local sqlite3 = require("lsqlite3")
 --эта dll нужна дл€ работы с битовыми флагами сделок. там зашито направление buy/sell
@@ -347,8 +349,18 @@ function OnTrade(trade)
 	
 end
 
---details
+-- +----------------------------------------------------+
+--                  DETAILS
+-- +----------------------------------------------------+
 
+function recalc_details()
+	--* пересчет таблицы детальных записей по парти€м
+    for key, details_table in pairs(details.t) do
+      if details_table~=nil then
+        maintable:recalc_table(details_table)
+      end    	
+    end
+end
 --функци€ закрывает окно таблицы детализации открытых позиций. по нажатию креста и кнопки ESC
 local f_cb_details = function( t_id,  msg,  par1, par2)
   
@@ -365,27 +377,35 @@ local f_cb_details = function( t_id,  msg,  par1, par2)
 	end  
 end 
 
---closed
+-- +----------------------------------------------------+
+--                  CLOSED POSITIONS
+-- +----------------------------------------------------+
 
---функци€ закрывает окно таблицы закрытых сделок. по нажатию креста и кнопки ESC
 local f_cb_closed = function( t_id,  msg,  par1, par2)
-  
-  if (msg==QTABLE_CLOSE)  then
-    DestroyTable(closedpos.t.t_id)
-  end
-  
-	if msg==QTABLE_VKEY then
+	--*функци€ закрывает окно таблицы закрытых сделок по нажатию креста и кнопки ESC
+	if msg==QTABLE_CLOSE  then
+		DestroyTable(closedpos.t.t_id)
+	elseif msg==QTABLE_VKEY then
 		--message(par2)
 		if par2 == 27 then -- esc
 			DestroyTable(closedpos.t.t_id)
 		end
 		--par2 = 13 - enter
-	end  
+	elseif msg==QTABLE_LBUTTONDBLCLK then
+		
+		
+	end 
+	
 end 
 
---функци€ обрабатывает событи€ окна таблицы контекстного меню
+
+-- +----------------------------------------------------+
+--                  ACTIONS
+-- +----------------------------------------------------+
+
 local f_cb_cntx = function( t_id,  msg,  par1, par2)
-  
+	--*функци€ обрабатывает событи€ окна таблицы контекстного меню
+
 	if (msg==QTABLE_CLOSE)  then
 		--DestroyTable(t_id)
 		actions:kill()
@@ -431,29 +451,12 @@ local f_cb_cntx = function( t_id,  msg,  par1, par2)
 end 
 
 
-function recalc_details()
-	--message('recalc details')
-    for key, details_table in pairs(details.t) do
-      if details_table~=nil then
-        maintable:recalc_table(details_table)
-      end    	
-    end
-end
-
 -- +----------------------------------------------------+
 --                  MAIN
 -- +----------------------------------------------------+
 
--- функци€ обратного вызова дл€ обработки событий в таблице. вызываетс€ из main()
---(или, другими словами, обработчик клика по таблице робота)
---параметры:
---  t_id - хэндл таблицы, полученный функцией AllocTable()
---  msg - тип событи€, происшедшего в таблице
---  par1 и par2 Ц значени€ параметров определ€ютс€ типом сообщени€ msg, 
---
---функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна
 local f_cb = function( t_id,  msg,  par1, par2)
-  
+  --*функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна (проверить)
   if (msg==QTABLE_CLOSE)  then
     is_run = false
     DestroyTables()
@@ -575,9 +578,8 @@ local f_cb = function( t_id,  msg,  par1, par2)
 
 end 
 
-
--- основна€ функци€ робота. здесь обновл€етс€ котировка и рассчитываетс€ прибыль
 function main()
+  --* основна€ функци€ робота. здесь обновл€етс€ котировка и рассчитываетс€ прибыль
 
   --установим обработчик событий таблицы робота
   SetTableNotificationCallback (maintable.t.t_id, f_cb)
@@ -662,8 +664,6 @@ function process_fifo_manual_deals()
 	end		
 end
 
---trades[ 11 ] ['flags'] = 64 --покупка
---trades[ 11 ] ['flags'] = 68 --продажа
 
 function process_fifo_manual_deals_from_table_deals()
 

@@ -635,7 +635,7 @@ trades[num] = {}
 			trades[ num ] ['datetime'] = {day=24, month=05,year=2018,hour=18,min=15,sec=19 }
 			
 			trades[ num ] ['operation'] = 'sell' --there are no that field in original trade table. 
-			
+			trades[ num ] ['account'] = '99221FX'
 			
 	return trades			
 end

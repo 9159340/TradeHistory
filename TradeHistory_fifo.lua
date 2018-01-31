@@ -177,7 +177,7 @@ function FIFO:decrease_short(trade)
           ' VALUES('.. 
                   --измерения
                   k..restShort[rest_count]['dim_client_code']      ..k..','..
-				  k..restShort[rest_count]['dim_depo_code']      ..k..','..
+				  k..restShort[rest_count]['dim_depo_code']        ..k..','..
                   k..restShort[rest_count]['dim_sec_code']         ..k..','..  
                   k..restShort[rest_count]['dim_class_code']       ..k..','..  
                   restShort[rest_count]['dim_trade_num']           ..','..

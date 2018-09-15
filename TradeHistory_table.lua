@@ -126,8 +126,8 @@ function MainTable:createTable(caption)
 end
 
 function MainTable:createOwnTable(caption)
-	local t = self:createTable(caption)
-	self.t = t
+	
+	self.t = self:createTable(caption)
 end
 
 --покажем сумму ГО по каждой позиции

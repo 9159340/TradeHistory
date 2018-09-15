@@ -9,39 +9,39 @@ function Settings:Init()
 	--фильтр пока будет работать только вместе с группировкой по классам
 	--значение элемента - бул - определяет видимость позиций
 	self.filter_by_class = {}
-	self.filter_by_class['SPBFUT']=true
-	self.filter_by_class['SPBOPT']=true
+	self.filter_by_class['SPBFUT']=false
+	self.filter_by_class['SPBOPT']=false
 	self.filter_by_class['TQBR']=false --акции
 	self.filter_by_class['EQOB']=false --корп облигации
 	self.filter_by_class['TQOB']=false --ОФЗ
 	self.filter_by_class['TQDE']=false --дефолтные акции (трансаэро)
-	self.filter_by_class['CETS']=false
+	self.filter_by_class['CETS']=true
 	self.filter_by_class['TQTF']=false --ETF
 	
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	
-	self.dark_theme = true
+	self.dark_theme = false
 	
 	self.show_total_collateral_on_forts = true		--last rows show totals of collateral on FORTS by client_code
 	
 	self.columns_visibility = {}
 	
 --настройка видимости колонок
-  self.columns_visibility["account"]=false
+  self.columns_visibility["account"]=true
   self.columns_visibility["depo"]=false --счет Депо для ММВБ
   self.columns_visibility["comment"]=false
   self.columns_visibility["secCode"]=true
   self.columns_visibility["classCode"]=false
   self.columns_visibility["lot"]=false
-  self.columns_visibility["dateOpen"]=false
+  self.columns_visibility["dateOpen"]=true
   self.columns_visibility["timeOpen"]=false
-  self.columns_visibility["tradeNum"]=false
+  self.columns_visibility["tradeNum"]=true
   self.columns_visibility["operation"]=true
   self.columns_visibility["quantity"]=true
   self.columns_visibility["amount"]=true
   self.columns_visibility["priceOpen"]=true
   self.columns_visibility["dateClose"]=true
-  self.columns_visibility["timeClose"]=false
+  self.columns_visibility["timeClose"]=true
   self.columns_visibility["priceClose"]=true
   self.columns_visibility["qtyClose"]=true
   self.columns_visibility["profitpt"]=true
@@ -77,8 +77,8 @@ function Settings:Init()
 	self.columns_width['quantity'] = 7
 	self.columns_width['amount'] = 7
 	self.columns_width['priceOpen'] = 10 
-	self.columns_width['dateClose'] = 7
-	self.columns_width['timeClose'] = 7
+	self.columns_width['dateClose'] = 10
+	self.columns_width['timeClose'] = 10
 	self.columns_width['priceClose'] = 10
 	self.columns_width['qtyClose'] = 7
 	self.columns_width['profitpt'] = 10

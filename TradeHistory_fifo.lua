@@ -20,21 +20,21 @@ end
 --FIFO
 
 
---возвращает комментарий из сделки, без служебных префиксов
---Параметры
---	brokerref - in - string - комментарий из сделки
+--returns comment from trade without prefixes
+--Parameters
+--	brokerref - in - string - comment
 function FIFO:get_deal_comment(brokerref)
 	local comment = ''
-	--бывают комменты вроде этого "99221FX/", именно этот пишется самим брокером на валютном рынке при простой покупке
+	--comment like that: "99221FX/", is written by broker (on SELT/CETS)
 	local j = string.find(brokerref, '/')
 	if j ~= nil then
-		--есть слэш
-		--если следом идет еще один слэш, то после него будет коммент
+		--if we've got symbol "/"
+		--if there is another slash after first - this is the comment
 		if string.sub(brokerref, j+1, j+1)=='/' then
 			comment = string.sub(brokerref, j+2)
 		else
-			--если слэш всего один, то это служебный коммент брокера, он нам не нужен
-			--вернем пустую строку
+			--if we've got only one slash this is comment of broker
+			--in that case we should discard it
 		end
 	end
 	return comment
@@ -451,11 +451,12 @@ end
 function substitute_sec_code(sec_code)
 	if sec_code == 'USD000000TOD' then
 		return 'USD000UTSTOM'
+	elseif sec_code == 'EUR_RUB__TOD' then
+		return 'EUR_RUB__TOM'
 	else
 		return sec_code
 	end
 end
-
 --проводит сделку по ФИФО
 --Parameters:
 --	db - in - sqlite db connection - подключение к базе sqlite

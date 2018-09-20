@@ -118,6 +118,11 @@ function MainTable:createTable(caption)
   
   --fur debug - shows time of last update the row
   t:AddColumn("timeUpdate",  QTABLE_STRING_TYPE, self:col_vis("timeUpdate"))     
+  
+  --profit by theor price for options
+  t:AddColumn("profitByTheorPricePt",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPricePt"))--point
+  t:AddColumn("profitByTheorPrice %",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice %"))    --%
+  t:AddColumn("profitByTheorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice"))    --RUB
 
   
   
@@ -132,7 +137,7 @@ function MainTable:createOwnTable(caption)
 	self.t = self:createTable(caption)
 end
 
---покажем сумму ГО по каждой позиции
+--show collateral for each position
 function MainTable:show_collateral(par_table, row)
 	local class_col = par_table:GetValue(row,'classCode')
 	if class_col ~= nil then
@@ -159,7 +164,7 @@ function MainTable:show_collateral(par_table, row)
 	end
 end
 
---пересчитывает все строки таблицы по текущей цене закрытия
+--recalculates all rows by current closing price
 --таблица передается через параметр, т.к. функция используется
 --для пересчета любых таблицы, открытых скриптом - главной и детальных
 function MainTable:recalc_table(par_table)
@@ -169,31 +174,34 @@ function MainTable:recalc_table(par_table)
   
   local t_size = par_table:GetSize(par_table.t_id)
   if t_size == nil then
-	return
+	  return
   end
   
-  --обход таблицы и обновление котировки
+  --update price and PnL
 	while row <= t_size do
 
 		--update price in col 'priceClose'
 		if par_table:GetValue(row,'operation') ~= nil then
-			--получим цену, по который закрывается позиция -- из параметров бумаги --getParamEx!
-			local priceClose = helper:get_priceClose(par_table, row)
+			--get price from instrument parameters --getParamEx!
+      local priceClose = helper:get_priceClose(par_table, row)
+      local theorPrice = helper:get_TheorPrice(par_table, row)
 			--чтобы не запускать пересчет строки лишний раз, сделаем проверку на изменение цены
 			--если цена в таблице (старая) отличается от текущей (priceClose) - обновляем
-			if helper:getPriceClose(par_table, row) ~= priceClose then
-				--установим текущую цену в таблицу
-				--последний параметр функции не заполнять!
-				--иначе - значение не обновляется:(
-				par_table:SetValue(row, 'priceClose', tostring(priceClose))
-				--покажем время последнего обновления цены 
+      if helper:getPriceClose(par_table, row) ~= priceClose 
+        or helper:getTheorPrice(par_table, row) ~= theorPrice 
+      then
+				--put current price to a table
+        --don't pass last parameter! values are not updating if it is passed
+        par_table:SetValue(row, 'priceClose', tostring(priceClose))
+        par_table:SetValue(row, 'theorPrice', tostring(theorPrice))
+				--show last price update time
 				par_table:SetValue(row, 'timeUpdate', tostring(os.date())) 
-				--рассчитаем прибыль по открытым позициям, установим цвет текста в зависимости от прибыли (зел/красн)
+				--calculates PnL, set row color according to profit or loss (green or red)
 				recalc:recalcPosition(par_table, row, false)
 			end
 		end
 
-		--покажем сумму ГО по каждой позиции
+		--show collaterdal for each position
 		self:show_collateral(par_table, row)
 		
 		--[[

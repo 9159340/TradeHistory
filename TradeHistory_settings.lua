@@ -2,7 +2,8 @@ Settings = class(function(acc)
 end)
 function Settings:Init()
 
-	--группировка позиций по классам бумаг
+	--group positions by instrument classes
+	
 	self.groupByClass = true
 	
 	--фильтр по классам бумаг. например, акции на споте не интересно выводить в спекулятивную таблицу
@@ -26,8 +27,14 @@ function Settings:Init()
 	
 	self.columns_visibility = {}
 	
+<<<<<<< HEAD
 --настройка видимости колонок
   self.columns_visibility["account"]=true
+=======
+--column visibility settings
+
+  self.columns_visibility["account"]=false
+>>>>>>> develop
   self.columns_visibility["depo"]=false --счет Депо для ММВБ
   self.columns_visibility["comment"]=false
   self.columns_visibility["secCode"]=true
@@ -59,9 +66,11 @@ function Settings:Init()
   self.columns_visibility["optionType"]=true
   self.columns_visibility["expiration"]=true
   self.columns_visibility["theorPrice"]=true
- 
+  self.columns_visibility["profitByTheorPricePt"]=true
+  self.columns_visibility['profitByTheorPrice %'] = true
+  self.columns_visibility["profitByTheorPrice"]=true 
 
---	настройка ширины колонок
+--	column width settings
 
 
 	self.columns_width = {}
@@ -98,6 +107,8 @@ function Settings:Init()
 	self.columns_width['optionType'] = 5
 	self.columns_width['expiration'] = 10
 	self.columns_width['theorPrice'] = 7
-
+	self.columns_width['profitByTheorPricePt'] = 10
+	self.columns_width['profitByTheorPrice %'] = 9
+	self.columns_width['profitByTheorPrice'] = 10
 
 end

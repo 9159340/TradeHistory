@@ -268,7 +268,7 @@ function Helper:get_priceClose(par_t, row)
 end
 
 
---вычисляет количество дней между датами. пока без учета високосных лет
+--calculates datediff in days. пока без учета високосных лет
 --Параметры
 --	startDate- вх - дата - формат даты: 2016-05-28 (т.к. как в SQL)
 function Helper:days_in_position(startDate, endDate)
@@ -349,4 +349,38 @@ function Helper:sell_depo(class, sec)
 		return 0
 	end
 end			
-			
+
+--returns theor price from table
+function Helper:getTheorPrice(t,row)
+  local res = false
+  local val = nil
+  res, val = check_nil(t, row, 'theorPrice')
+  if res == true then
+	return 0
+  end
+  return val  
+end
+
+
+--returns theor price from instrument
+--Параметры
+--  par_t - in - table - т.к. может быть открыта не только основная таблица, а еще таблица деталей, то пришлось добавить параметр
+--  row - вх - число - номер строки в таблице робота
+function Helper:get_TheorPrice(par_t, row)
+
+  local res = 0
+  local class_code = par_t:GetValue(row,'classCode').image
+  local sec_code = par_t:GetValue(row,'secCode').image
+
+  res = tonumber(getParamEx (class_code, sec_code, 'theorprice').param_value)
+
+  if res == nil then
+    res = 0
+  end
+  --rounding
+  --priceClose = math.ceil(priceClose*10000)/10000
+  res = self:math_round(res, 4)
+  
+  return res
+
+end

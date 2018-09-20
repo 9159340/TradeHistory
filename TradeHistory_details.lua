@@ -129,6 +129,27 @@ function Details:addRowFromFIFO(sqliteRow)
 	end
 	
 	self.t[self.key]:SetValue(row, 'optionType', optionType)	
+	
+	--покажем теор цену опциона
+	local theorprice = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'theorprice')
+	if theorprice ~= nil then
+		theorprice = theorprice.param_image
+	else
+		theorprice = ''
+	end
+	
+	self.t[self.key]:SetValue(row, 'theorPrice', theorprice)
+	
+	--покажем дату экспирации инструмента
+	local expiration = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'expdate')
+	if expiration ~= nil then
+		expiration = expiration.param_image
+	else
+		expiration = ''
+	end
+	
+	self.t[self.key]:SetValue(row, 'expiration', tostring(expiration))	
+	
 end
 
 --добавляет все открытые позиции в таблицу робота

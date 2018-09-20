@@ -20,7 +20,7 @@ function Settings:Init()
 	
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	
-	self.dark_theme = true
+	self.dark_theme = false
 	
 	self.show_total_collateral_on_forts = true		--last rows show totals of collateral on FORTS by client_code
 	
@@ -53,10 +53,12 @@ function Settings:Init()
   self.columns_visibility["days"]=true
   self.columns_visibility["close_price_step"]=false
   self.columns_visibility["close_price_step_price"]=false
-  self.columns_visibility["buyDepo"]=true
+  self.columns_visibility["buyDepo"]=false
   self.columns_visibility["sellDepo"]=false
   self.columns_visibility["timeUpdate"]=false
   self.columns_visibility["optionType"]=true
+  self.columns_visibility["expiration"]=true
+  self.columns_visibility["theorPrice"]=true
  
 
 --	настройка ширины колонок
@@ -77,8 +79,8 @@ function Settings:Init()
 	self.columns_width['quantity'] = 7
 	self.columns_width['amount'] = 7
 	self.columns_width['priceOpen'] = 10 
-	self.columns_width['dateClose'] = 7
-	self.columns_width['timeClose'] = 7
+	self.columns_width['dateClose'] = 10
+	self.columns_width['timeClose'] = 10
 	self.columns_width['priceClose'] = 10
 	self.columns_width['qtyClose'] = 7
 	self.columns_width['profitpt'] = 10
@@ -94,6 +96,8 @@ function Settings:Init()
 	self.columns_width['sellDepo'] = 7
 	self.columns_width['timeUpdate'] = 7
 	self.columns_width['optionType'] = 5
+	self.columns_width['expiration'] = 10
+	self.columns_width['theorPrice'] = 7
 
 
 end

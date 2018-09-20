@@ -39,9 +39,9 @@ function Colorizer:colorize_row_light_theme(t, row, PnL)
   local sel_f_color = RGB(0, 0, 0)          --font color in selected row
 
   if PnL > 0 then
-    b_color = RGB(230, 255, 230)  --green
+    b_color = RGB(248, 255, 248)  --green
   else
-    b_color = RGB(255, 230, 230)  --red
+    b_color = RGB(255, 248, 248)  --red
   end
   
   SetColor(t.t_id, row, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)

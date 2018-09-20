@@ -20,21 +20,21 @@ end
 --FIFO
 
 
---возвращает комментарий из сделки, без служебных префиксов
---Параметры
---	brokerref - in - string - комментарий из сделки
+--returns comment from trade without prefixes
+--Parameters
+--	brokerref - in - string - comment
 function FIFO:get_deal_comment(brokerref)
 	local comment = ''
-	--бывают комменты вроде этого "99221FX/", именно этот пишется самим брокером на валютном рынке при простой покупке
+	--comment like that: "99221FX/", is written by broker (on SELT/CETS)
 	local j = string.find(brokerref, '/')
 	if j ~= nil then
-		--есть слэш
-		--если следом идет еще один слэш, то после него будет коммент
+		--if we've got symbol "/"
+		--if there is another slash after first - this is the comment
 		if string.sub(brokerref, j+1, j+1)=='/' then
 			comment = string.sub(brokerref, j+2)
 		else
-			--если слэш всего один, то это служебный коммент брокера, он нам не нужен
-			--вернем пустую строку
+			--if we've got only one slash this is comment of broker
+			--in that case we should discard it
 		end
 	end
 	return comment
@@ -177,7 +177,7 @@ function FIFO:decrease_short(trade)
           ' VALUES('.. 
                   --измерения
                   k..restShort[rest_count]['dim_client_code']      ..k..','..
-				  k..restShort[rest_count]['dim_depo_code']      ..k..','..
+				  k..restShort[rest_count]['dim_depo_code']        ..k..','..
                   k..restShort[rest_count]['dim_sec_code']         ..k..','..  
                   k..restShort[rest_count]['dim_class_code']       ..k..','..  
                   restShort[rest_count]['dim_trade_num']           ..','..
@@ -392,37 +392,51 @@ function FIFO:increase_short(trade, qty)
 		trans_id = trade.trans_id
 	end
 		
-    local sql='INSERT INTO fifo_short_3 '..
-      --перечислим поля, которые будем добавлять
-          '(dim_client_code, dim_depo_code, dim_sec_code, dim_class_code, dim_trade_num, dim_brokerref,'..
-            'res_qty, res_value,'..
-            'attr_date,attr_time, attr_price,attr_trade_currency,attr_accruedint,attr_trans_id,'..
-            'attr_order_num,attr_lot,attr_exchange_comission)'..
+    local sql=
+		'INSERT INTO fifo_short_3 '.. [[
+			(	dim_client_code, 
+				dim_depo_code,
+				dim_sec_code,
+				dim_class_code,
+				dim_trade_num,
+				dim_brokerref,
+				res_qty,
+				res_value,
+				attr_date,
+				attr_time,
+				attr_price,
+				attr_trade_currency,
+				attr_accruedint,
+				attr_trans_id,
+				attr_order_num,
+				attr_lot,
+				attr_exchange_comission)
     
-            ' VALUES('..
-             
-            --измерения
-            k..trade.client_code      ..k..','..--  Код клиента
-			k..trade.account      ..k..','..--  Код депо
-            k..sec_code         ..k..','..--  Код бумаги заявки  
-            k..trade.class_code       ..k..','..--  Код класса  
-            trade.trade_num           ..','.. --  Номер сделки в торговой системе 
-            k..comment		          ..k..' ,'..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
+            VALUES
+				(
+				]] ..
+				--измерения
+				k..trade.client_code      	..k..','..--  Код клиента
+				k..trade.account      		..k..','..--  Код депо
+				k..sec_code         			..k..','..--  Код бумаги заявки  
+				k..trade.class_code       	..k..','..--  Код класса  
+				trade.trade_num           	..','.. 	  --  Номер сделки в торговой системе 
+				k..comment		          		..k..','..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
             
-            --ресурсы
-            -1*qty                 ..','..--  Количество бумаг в последней сделке в лотах  
-            -1 * qty * trade.price * mult   ..','..	
-            
-            --реквизиты  
-            k..helper:get_trade_date_sql(trade)..k..','..--  Дата и время
-            k..helper:get_trade_time(trade)..k..','..--  Дата и время
-            trade.price               ..','.. 	--  Цена
-            k..trade.trade_currency..k..','..	--  Валюта
-            trade.accruedint          ..','..	--  Накопленный купонный доход
-            k..trans_id..k      	  ..','..	--  Идентификатор транзакции
-            trade.order_num           ..','..	--  Номер заявки в торговой системе  
-            getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value ..','..  
-            trade.exchange_comission  ..		--  Комиссия Фондовой биржи (ММВБ)  
+				--ресурсы
+				-1*qty                 ..','..--  Количество бумаг в последней сделке в лотах  
+				-1 * qty * trade.price * mult   ..','..	
+				
+				--реквизиты  
+				k..helper:get_trade_date_sql(trade)..k..','..--  Дата и время
+				k..helper:get_trade_time(trade)..k..','..--  Дата и время
+				trade.price               ..','.. 	--  Цена
+				k..trade.trade_currency..k..','..	--  Валюта
+				trade.accruedint          ..','..	--  Накопленный купонный доход
+				k..trans_id..k      	  ..','..	--  Идентификатор транзакции
+				trade.order_num           ..','..	--  Номер заявки в торговой системе  
+				getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value ..','..  
+				trade.exchange_comission  ..		--  Комиссия Фондовой биржи (ММВБ)  
             ');'          
                        
      self.db:exec(sql)  
@@ -437,11 +451,12 @@ end
 function substitute_sec_code(sec_code)
 	if sec_code == 'USD000000TOD' then
 		return 'USD000UTSTOM'
+	elseif sec_code == 'EUR_RUB__TOD' then
+		return 'EUR_RUB__TOM'
 	else
 		return sec_code
 	end
 end
-
 --проводит сделку по ФИФО
 --Parameters:
 --	db - in - sqlite db connection - подключение к базе sqlite
@@ -1013,22 +1028,21 @@ function FIFO:QueryTextClosedFifoPositionsLong()
 [[
 SELECT
           'buy' AS operation
-        ,
            --измерения
-          ClosedPos.dim_client_code AS dim_client_code
-		  ,ClosedPos.dim_depo_code AS dim_depo_code
+        , ClosedPos.dim_client_code AS dim_client_code
+		, ClosedPos.dim_depo_code AS dim_depo_code
         , ClosedPos.dim_sec_code AS dim_sec_code
         , ClosedPos.dim_class_code AS dim_class_code
         , ClosedPos.dim_brokerref AS dim_brokerref
         , OpenPos.dim_trade_num AS dim_trade_num
-        ,
+        
            --ресурсы
-          OpenPos.res_qty        AS quantity
+        , OpenPos.res_qty        AS quantity
         , -1*ClosedPos.res_qty   AS qtyClose
         , -1*ClosedPos.res_value AS value
-        ,
+        
            --реквизиты
-          OpenPos.attr_price AS price
+        , OpenPos.attr_price AS price
         , OpenPos.attr_date  AS dateOpen
         , OpenPos.attr_time  AS timeOpen
         , ClosedPos.close_trade_num AS close_trade_num
@@ -1042,14 +1056,13 @@ SELECT
         , securities.lotsize AS lot
 FROM
           fifo_long_3 AS ClosedPos
-          LEFT JOIN
-                    fifo_long_3 AS OpenPos
-          ON
-                    OpenPos.dim_trade_num = ClosedPos.dim_trade_num
-                    AND OpenPos.res_qty   > 0
-          LEFT JOIN
-                    securities
-          ON
+			
+			LEFT JOIN fifo_long_3 AS OpenPos
+				ON	
+					OpenPos.dim_trade_num = ClosedPos.dim_trade_num
+					AND OpenPos.res_qty   > 0
+			LEFT JOIN securities
+				ON
                     securities.sec_code       = ClosedPos.dim_sec_code
                     AND securities.class_code = ClosedPos.dim_class_code
 WHERE

@@ -69,6 +69,8 @@ function MainTable:createTable(caption)
   t:AddColumn("secCode",    QTABLE_CACHED_STRING_TYPE, self:col_vis("secCode"))  
   
   t:AddColumn("optionType",    QTABLE_CACHED_STRING_TYPE, self:col_vis("optionType"))
+  t:AddColumn("expiration",    QTABLE_STRING_TYPE, self:col_vis("expiration"))
+  t:AddColumn("theorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("theorPrice"))
   
   t:AddColumn("classCode",  QTABLE_CACHED_STRING_TYPE, self:col_vis("classCode"))  
   t:AddColumn("lot",  		 QTABLE_INT_TYPE, self:col_vis("lot"))
@@ -126,8 +128,8 @@ function MainTable:createTable(caption)
 end
 
 function MainTable:createOwnTable(caption)
-	local t = self:createTable(caption)
-	self.t = t
+	
+	self.t = self:createTable(caption)
 end
 
 --покажем сумму ГО по каждой позиции

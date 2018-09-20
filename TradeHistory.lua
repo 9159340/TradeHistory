@@ -143,7 +143,27 @@ function addRowFromFIFO(sqliteRow)
 	end
 	
 	maintable.t:SetValue(row, 'optionType', optionType)
-
+	
+	--покажем теор цену опциона
+	local theorprice = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'theorprice')
+	if theorprice ~= nil then
+		theorprice = theorprice.param_image
+	else
+		theorprice = ''
+	end
+	
+	maintable.t:SetValue(row, 'theorPrice', theorprice)	
+	
+	--покажем дату экспирации инструмента
+	local expiration = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'expdate')
+	if expiration ~= nil then
+		expiration = expiration.param_image
+	else
+		expiration = ''
+	end
+	
+	maintable.t:SetValue(row, 'expiration', tostring(expiration))	
+	
 end
 
 
@@ -526,12 +546,6 @@ local f_cb = function( t_id,  msg,  par1, par2)
 		or class_code == 'TQOB'
 		or class_code == 'TQDE'
 		or class_code == 'TQTF'
-		or class_code == 'TQBR'
-		or class_code == 'TQBR'
-		or class_code == 'TQBR'
-		or class_code == 'TQBR'
-		or class_code == 'TQBR'
-		or class_code == 'TQBR'
 		then
 			--по щелчку на имя класса будем сворачивать и разворачивать открытые позиции в этом классе
 			if settings.filter_by_class[class_code] == false then
@@ -553,40 +567,38 @@ local f_cb = function( t_id,  msg,  par1, par2)
 		
 	--par2 = 13 - enter
 	
-	
 	elseif msg==QTABLE_RBUTTONUP then
 		
 		actions.account     	= maintable.t:GetValue(par1,'account').image
-		actions.depo	     		= maintable.t:GetValue(par1,'depo').image	--счет Депо для ММВБ, например L01-00000F00. на ФОРТС не используется
+		actions.depo	     	= maintable.t:GetValue(par1,'depo').image	--счет Депо для ММВБ, например L01-00000F00. на ФОРТС не используется
 
 		actions.sec_code    	= maintable.t:GetValue(par1,'secCode').image
 		actions.class_code  	= maintable.t:GetValue(par1,'classCode').image
 		
 		actions.qty     		= maintable.t:GetValue(par1,'quantity').image
 		actions.direction     	= maintable.t:GetValue(par1,'operation').image
-		actions.comment		= maintable.t:GetValue(par1,'comment').image
+		actions.comment			= maintable.t:GetValue(par1,'comment').image
  			
 		actions:showContextMenu()
 	
-			--чтобы можно было закрыть окно контекстного меню - повесим на него обработчик колбэков
+		--чтобы можно было закрыть окно контекстного меню - повесим на него обработчик колбэков
 		SetTableNotificationCallback (actions.t.t_id, f_cb_cntx)
-	
-	
-
-	
+		
 	end  
 
 end 
 
+
+-- основная функция робота. здесь обновляется котировка и рассчитывается прибыль
 function main()
-  --* основная функция робота. здесь обновляется котировка и рассчитывается прибыль
 
   --установим обработчик событий таблицы робота
   SetTableNotificationCallback (maintable.t.t_id, f_cb)
 
   --эта процедура помещает пропущенные сделки в фифо. сделки заполнять вручную! (в функции create_table_trades())
   --process_fifo_manual_deals()
-  --process_fifo_manual_deals_from_table_deals()
+  
+  --pro_cess_fifo_manual_deals_from_table_deals() --это какая-то разовая потребность была
   
   while is_run do  
     --обновим PnL в главной таблице
@@ -607,7 +619,7 @@ end
 
 --импорт в фифо из таблицы сделок, сохраненных в текст
 
-
+--создает таблицу (2-мерный) массив со сделками
 function create_table_trades()
 
 --trades[ 11 ] ['flags'] = 64 --покупка
@@ -644,7 +656,7 @@ end
 function process_fifo_manual_deals()
 
 	local trades = create_table_trades()
-
+	
 	--тут одна проблема останется. в фифо мы получаем стоимость шага цены вот так:
     --getParamEx (trade.class_code, trade.sec_code, 'STEPPRICE').param_value..
 	--т.е. при загрузке пропущенных сделок он будет неверный. хотя, если грузить сделке вечерки следующим утром, то наверное он не поменяется... проверить бы

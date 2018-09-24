@@ -550,8 +550,8 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 		ORDER BY       
     subq.dim_client_code,
     subq.dim_class_code,
-    subq.dim_sec_code,  
     subq.mat_date,
+    subq.dim_sec_code,  
     subq.dateOpen,
 		subq.timeOpen,
 		subq.dim_brokerref 

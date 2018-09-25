@@ -1,5 +1,6 @@
 helper = {}
 settings = {}
+maintable={}
 FIFO = class(function(acc)
 end)
 
@@ -11,6 +12,9 @@ function FIFO:Init()
   settings=Settings()
   settings:Init()
   
+  maintable= MainTable()
+  maintable:Init()
+
   self.db = sqlite3.open(settings.db_path)
   
 end
@@ -224,66 +228,66 @@ end
 --]]
 function FIFO:increase_long(trade, qty)
 
-    local k="'"
+  local k="'"
 
-	local mult = self:get_mult(trade.sec_code, trade.class_code)
-	
-	local sec_code = substitute_sec_code(trade.sec_code)
-	
-	local comment = self:get_deal_comment(trade.brokerref)
-	
-	--у брокера Открытие на Едином Счете возникает баг, связанный с тем, что это поле равно nil
-	if trade.trans_id == nil then
-		trans_id = ''
-	else
-		trans_id = trade.trans_id
-	end
-	
-     local sql='INSERT INTO fifo_long_3 '..
-      --перечислим поля, которые будем добавлять
-      '(dim_client_code, dim_depo_code, dim_sec_code, dim_class_code, dim_trade_num,dim_brokerref,'..
-      'res_qty, res_value,'..
-      'attr_date, attr_time, attr_price, attr_trade_currency, attr_accruedint, attr_trans_id,'..
-      'attr_order_num,attr_lot,attr_exchange_comission)'..
+  local mult = self:get_mult(trade.sec_code, trade.class_code)
+  
+  local sec_code = substitute_sec_code(trade.sec_code)
+  
+  local comment = self:get_deal_comment(trade.brokerref)
+  
+  --у брокера Открытие на Едином Счете возникает баг, связанный с тем, что это поле равно nil
+  if trade.trans_id == nil then
+    trans_id = ''
+  else
+    trans_id = trade.trans_id
+  end
 
-      ' VALUES('..
-       
-      --измерения
-      k..trade.client_code      ..k..','..--  Код клиента
-	  k..trade.account      ..k..','..--  Код депо
-      k..sec_code         ..k..','..--  Код бумаги заявки  
-      k..trade.class_code       ..k..','..--  Код класса  
-      trade.trade_num           ..','.. --  Номер сделки в торговой системе 
-      k..comment 		        ..k..' ,'..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
-      
-      --ресурсы
-      qty     ..','..  
-      qty * trade.price * mult ..','..	
-      
-      --реквизиты  
-      k..helper:get_trade_date_sql(trade)..k..','..--  Дата и время
-      k..helper:get_trade_time(trade)..k..','..--  Дата и время
-      trade.price               ..','.. --  Цена
-      k..trade.trade_currency..k..','..--  Валюта
-      trade.accruedint          ..','..--  Накопленный купонный доход
-      k..trans_id..k      		..','..--  Идентификатор транзакции
-      trade.order_num           ..','..--  Номер заявки в торговой системе  
-      getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value  ..','..  
-      trade.exchange_comission  ..--  Комиссия Фондовой биржи (ММВБ)  
-      ');'          
-                 
-    self.db:exec(sql)  
+  local sql='INSERT INTO fifo_long_3 '..
+  --перечислим поля, которые будем добавлять
+  '(dim_client_code, dim_depo_code, dim_sec_code, dim_class_code, dim_trade_num,dim_brokerref,'..
+  'res_qty, res_value,'..
+  'attr_date, attr_time, attr_price, attr_trade_currency, attr_accruedint, attr_trans_id,'..
+  'attr_order_num,attr_lot,attr_exchange_comission)'..
+
+  ' VALUES('..
+    
+  --измерения
+  k..trade.client_code      ..k..','..--  Код клиента
+  k..trade.account      ..k..','..--  Код депо
+  k..sec_code         ..k..','..--  Код бумаги заявки  
+  k..trade.class_code       ..k..','..--  Код класса  
+  trade.trade_num           ..','.. --  Номер сделки в торговой системе 
+  k..comment 		        ..k..' ,'..--  Комментарий,'.. обычно: <код клиента>/<номер поручения>
+  
+  --ресурсы
+  qty     ..','..  
+  qty * trade.price * mult ..','..	
+  
+  --реквизиты  
+  k..helper:get_trade_date_sql(trade)..k..','..--  Дата и время
+  k..helper:get_trade_time(trade)..k..','..--  Дата и время
+  trade.price               ..','.. --  Цена
+  k..trade.trade_currency..k..','..--  Валюта
+  trade.accruedint          ..','..--  Накопленный купонный доход
+  k..trans_id..k      		..','..--  Идентификатор транзакции
+  trade.order_num           ..','..--  Номер заявки в торговой системе  
+  getParamEx (trade.class_code, sec_code, 'LOTSIZE').param_value  ..','..  
+  trade.exchange_comission  ..--  Комиссия Фондовой биржи (ММВБ)  
+  ');'          
+                
+  self.db:exec(sql)  
 end
 
 --[[уменьшить длинную позицию
 --]]
 function FIFO:decrease_long(trade)
---алгоритм
---получает таблицу остатков длинных позиций
---определяет количество (из сделки), на которое можно закрыть длинные позиции
---закрывает длинные позиции
---возвращает количество бумаг из сделки, которое осталось после закрытия позиций
---(если что-то осталось, то на это количество открывается шорт) 
+  --алгоритм
+  --получает таблицу остатков длинных позиций
+  --определяет количество (из сделки), на которое можно закрыть длинные позиции
+  --закрывает длинные позиции
+  --возвращает количество бумаг из сделки, которое осталось после закрытия позиций
+  --(если что-то осталось, то на это количество открывается шорт) 
 
   local comment = self:get_deal_comment(trade.brokerref)
   
@@ -464,31 +468,31 @@ end
 function FIFO:makeFifo(trade)
 
     --определим направление сделки
-    local direction = self:what_is_the_direction(trade) 
+  local direction = self:what_is_the_direction(trade) 
 
 	local comment = self:get_deal_comment(trade.brokerref)
-	
-    if direction == 'buy' then
+
+  if direction == 'buy' then
+  
+    --buy. decrease short
+    local qty = self:decrease_short(trade)    
     
-      --buy. decrease short
-      local qty = self:decrease_short(trade)    
-      
-      --buy. increase long
-      if qty > 0 then
-        self:increase_long(trade, qty)
-      end
-      
-    elseif direction == 'sell' then
-    
-      --sell. decrease long
-      local qty = self:decrease_long(trade)     
-      
-      --sell. increase short
-      if qty > 0 then
-        self:increase_short(trade, qty)
-      end
-      
+    --buy. increase long
+    if qty > 0 then
+      self:increase_long(trade, qty)
     end
+    
+  elseif direction == 'sell' then
+  
+    --sell. decrease long
+    local qty = self:decrease_long(trade)     
+    
+    --sell. increase short
+    if qty > 0 then
+      self:increase_short(trade, qty)
+    end
+    
+  end
     
 end
 
@@ -497,17 +501,19 @@ end
 --получает все открытые позиции из таблиц бд sqlite и возвращает таблицу Lua,
 --из которой потом позиции переносятся в главную таблицу робота
 --Parameters:
---	db - in - sqlite db connection - подключение к базе sqlite
-function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetails)
+--	
+--  totals_t - simple lua table from TradeHistory_table class. it is needed to keep total PnL and Collateral by account and class_code
+function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetails, totals_t)
 
---алгоритм
---выбрать незакрытые позиции, сгруппированные в том числе по номеру сделки, чтобы получить дату и время сделки
---(это в самом глубоком подзапросе)
---из полученного подзапроса выбрать агрегаты суммы и количества и минимальные значения даты и времени
---(это для отображения минимальной даты сделки, которая открыла позицию)
---(запрос второго уровня)
---выбрать из получившегося запроса все его поля, плюс добавит добавить таблицу бумаг для получения лота
---(лот нужен больше для информации, причем для спота)  
+  --алгоритм
+  --выбрать незакрытые позиции, сгруппированные в том числе по номеру сделки, чтобы получить дату и время сделки
+  --(это в самом глубоком подзапросе)
+  --из полученного подзапроса выбрать агрегаты суммы и количества и минимальные значения даты и времени
+  --(это для отображения минимальной даты сделки, которая открыла позицию)
+  --(запрос второго уровня)
+  --выбрать из получившегося запроса все его поля, плюс добавить таблицу бумаг для получения лота и даты экспирации
+  --(лот нужен больше для информации, причем для спота)  
+  --(дата экспирации нужна для сортировки) 
 
 	local  sql = 
 	[[
@@ -547,11 +553,12 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 
 	[[ 
 		ORDER BY       
-		subq.dateOpen,
+    subq.dim_client_code,
+    subq.dim_class_code,
+    subq.mat_date,
+    subq.dim_sec_code,  
+    subq.dateOpen,
 		subq.timeOpen,
-		subq.dim_client_code,
-		subq.dim_sec_code,  
-		subq.dim_class_code,  
 		subq.dim_brokerref 
 	]]
 
@@ -561,13 +568,19 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 
 	--helper:save_sql_to_file(sql, 'open_pos.sql')
 
-	local forts_totals = nil
-	if settings.show_total_collateral_on_forts == true then
-		forts_totals = {} 	--example: forts_totals['43G07K'] = 12550
+  local forts_totals = nil
+  local forts_totals_2 = nil
+
+  if settings.show_total_collateral_on_forts == true then
+    --forts_totals - 1-dimension array - we will put there 'dim_client_code' as a key
+    -- and a number as an amount of collateral. example: forts_totals['43G07K'] = 12550
+		forts_totals = {}
 	end
 	
-	--this function returns usual lua table
+	--this function returns simple lua table
 	local vt = {}
+
+  local collateral = 0
 
 	local r_count = 1
 	for row in self.db:nrows(sql) do 
@@ -604,27 +617,25 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 		vt[r_count]['timeOpen']=row.timeOpen
 		vt[r_count]['lot'] = row.lot      
 
-		if settings.show_total_collateral_on_forts == true then
-			if row.dim_class_code == 'SPBFUT' or row.dim_class_code == 'SPBOPT' then
-				if forts_totals[row.dim_client_code] == nil then
-					--add element of array
-					forts_totals[row.dim_client_code] = 0
-				end
-				--if row.operation == 'buy' then
-					forts_totals[row.dim_client_code] = forts_totals[row.dim_client_code] + (helper:buy_depo(row.dim_class_code, row.dim_sec_code) * row.qty)
-				--else
-					--forts_totals[row.dim_client_code] = forts_totals[row.dim_client_code] + (helper:sell_depo(row.dim_class_code, row.dim_sec_code) * row.qty)
-				--end
-			end
+		if settings.show_totals == true then
+      collateral = helper:buy_depo(row.dim_class_code, row.dim_sec_code) * row.qty --has sense only for FORTS
+				
+      if totals_t ~= nil then
+        --nil may present if we run this function for details of fifo
+        maintable:addClientToTotalsTable( row.dim_client_code )
+        maintable:addClassToTotalsTable( row.dim_client_code, row.dim_class_code )
+          
+        maintable:addValuesToTotalsTable( row.dim_client_code, row.dim_class_code, collateral, 0 )
+      end
+
 		end		
 			
 		r_count = r_count + 1
 	end      
 
-
 	--message('rows in closed pos '..tostring(#vt))
 	--message(vt[1]['dim_trade_num'])
-	return vt  , forts_totals
+	return vt 
 
 end
 
@@ -637,7 +648,7 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
   --из полученного подзапроса выбрать агрегаты суммы и количества и минимальные значения даты и времени
   --(это для отображения минимальной даты сделки, которая открыла позицию)
   --(запрос второго уровня)
-  --выбрать из получившегося запроса все его поля, плюс добавит добавить таблицу бумаг для получения лота
+  --выбрать из получившегося запроса все его поля, плюс добавить таблицу бумаг для получения лота
   --(лот нужен больше для информации, причем для спота)  
 	local k = "'"
 
@@ -652,7 +663,7 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
         
            --измерения
         , q1.dim_client_code AS dim_client_code
-		, q1.dim_depo_code AS dim_depo_code
+		    , q1.dim_depo_code AS dim_depo_code
 		  
         , q1.dim_sec_code    AS dim_sec_code
         , q1.dim_class_code  AS dim_class_code
@@ -670,12 +681,13 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
            --ресурсы
         , q1.qty   AS qty
         , q1.value AS value
-		, q1.commiss AS commiss
+		    , q1.commiss AS commiss
         , coalesce(q1.price, 0) AS price
          --average price of position
           --other
         , securities.lotsize AS lot --info. has the meaning only for spot
-FROM
+        , securities.mat_date AS mat_date
+        FROM
           (
                     SELECT
                               --измерения
@@ -752,18 +764,18 @@ FROM
                             , dim_class_code
                             , dim_brokerref ]]
 
-if isDetails then							
-	sql = sql .. ', dim_trade_num'
+  if isDetails then							
+  	sql = sql .. ', dim_trade_num'
 
-end
-	sql = sql .. [[ ) AS q1
+  end
+	  sql = sql .. [[ ) AS q1
           LEFT JOIN
                     securities
           ON
                     securities.sec_code       = q1.dim_sec_code
                     AND securities.class_code = q1.dim_class_code
 
-]]
+  ]]
   
   --set up the parameters
 	if sec_code ~= nil then
@@ -923,8 +935,8 @@ end
 function FIFO:readClosedFifoPositions()
 
    local sql = 
-[[
-SELECT
+  [[
+    SELECT
           subq.operation AS operation
         ,
            --измерения
@@ -953,14 +965,14 @@ SELECT
         , subq.close_price_step       AS close_price_step
         , subq.close_price_step_price AS close_price_step_price
         , subq.lot                    AS lot
-FROM
+  FROM
           (
-]] ..
+  ]] ..
 	     
 		 	self:QueryTextClosedFifoPositionsLong() .. ' UNION ALL ' .. self:QueryTextClosedFifoPositionsShort() .. ' ) AS subq ' .. 
 		 
-[[
-ORDER BY
+  [[
+    ORDER BY
         subq.close_date,
         subq.close_time,
         subq.dim_trade_num,
@@ -968,7 +980,7 @@ ORDER BY
         subq.dim_sec_code,  
         subq.dim_class_code,  
         subq.dim_brokerref
-]]
+  ]]
   
     
 	--helper:save_sql_to_file(sql, 'closed_pos.sql')
@@ -1025,8 +1037,8 @@ end
 function FIFO:QueryTextClosedFifoPositionsLong()
 
   local sql = 
-[[
-SELECT
+  [[
+    SELECT
           'buy' AS operation
            --измерения
         , ClosedPos.dim_client_code AS dim_client_code
@@ -1054,7 +1066,7 @@ SELECT
         , ClosedPos.close_price_step AS close_price_step
         , ClosedPos.close_price_step_price AS close_price_step_price
         , securities.lotsize AS lot
-FROM
+  FROM
           fifo_long_3 AS ClosedPos
 			
 			LEFT JOIN fifo_long_3 AS OpenPos
@@ -1065,9 +1077,9 @@ FROM
 				ON
                     securities.sec_code       = ClosedPos.dim_sec_code
                     AND securities.class_code = ClosedPos.dim_class_code
-WHERE
+  WHERE
           ClosedPos.res_qty < 0
-]]
+  ]]
 
    
 	return sql  
@@ -1078,8 +1090,8 @@ end
 function FIFO:QueryTextClosedFifoPositionsShort()
 
     local sql = 
-[[
-SELECT
+  [[
+    SELECT
           'sell' AS operation
         ,
            --измерения
@@ -1108,7 +1120,7 @@ SELECT
         , ClosedPos.close_price_step AS close_price_step
         , ClosedPos.close_price_step_price AS close_price_step_price
         , securities.lotsize AS lot
-FROM
+    FROM
           fifo_short_3 AS ClosedPos
           LEFT JOIN
                     fifo_short_3 AS OpenPos
@@ -1120,7 +1132,7 @@ FROM
           ON
                     securities.sec_code       = ClosedPos.dim_sec_code
                     AND securities.class_code = ClosedPos.dim_class_code
-WHERE
+    WHERE
           ClosedPos.res_qty > 0
           
         ]]  

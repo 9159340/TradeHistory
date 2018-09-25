@@ -6,6 +6,14 @@ end)
 
 function MainTable:Init()
   self.t = nil --ID of table
+
+  --table in memory to keep PnL and collateral
+  --example
+  --forts_totals_2[row.dim_client_code] = {}
+  --forts_totals_2[row.dim_client_code][row.dim_class_code] = {}    
+  --forts_totals_2[row.dim_client_code][row.dim_class_code]['collateral'] = 0
+  --forts_totals_2[row.dim_client_code][row.dim_class_code]['PnL'] = 0
+  self.totals_t = nil 
   
   settings= Settings()
   settings:Init()
@@ -70,7 +78,6 @@ function MainTable:createTable(caption)
   
   t:AddColumn("optionType",    QTABLE_CACHED_STRING_TYPE, self:col_vis("optionType"))
   t:AddColumn("expiration",    QTABLE_STRING_TYPE, self:col_vis("expiration"))
-  t:AddColumn("theorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("theorPrice"))
   
   t:AddColumn("classCode",  QTABLE_CACHED_STRING_TYPE, self:col_vis("classCode"))  
   t:AddColumn("lot",  		 QTABLE_INT_TYPE, self:col_vis("lot"))
@@ -120,6 +127,7 @@ function MainTable:createTable(caption)
   t:AddColumn("timeUpdate",  QTABLE_STRING_TYPE, self:col_vis("timeUpdate"))     
   
   --profit by theor price for options
+  t:AddColumn("theorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("theorPrice"))
   t:AddColumn("profitByTheorPricePt",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPricePt"))--point
   t:AddColumn("profitByTheorPrice %",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice %"))    --%
   t:AddColumn("profitByTheorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice"))    --RUB
@@ -132,10 +140,14 @@ function MainTable:createTable(caption)
   
 end
 
+
 function MainTable:createOwnTable(caption)
 	
-	self.t = self:createTable(caption)
+  self.t = self:createTable(caption)
+  
 end
+
+
 
 --show collateral for each position
 function MainTable:show_collateral(par_table, row)
@@ -165,9 +177,11 @@ function MainTable:show_collateral(par_table, row)
 end
 
 --recalculates all rows by current closing price
---таблица передается через параметр, т.к. функция используется
---для пересчета любых таблицы, открытых скриптом - главной и детальных
-function MainTable:recalc_table(par_table)
+-- Parameters
+--  par_table - main table of robot. passes by parameter because this func may be used
+--              for recalculation of any table, main or detailed
+--  totals_t  - simple lua table. see this file, method createTotalsTable()
+function MainTable:recalc_table( par_table, totals_t )
   
   --номер строки, с которой начинаются открытые позиции.
   local row = 2 --иногда таблица смещается на 1 строку вниз, но алгоритму это не мешает
@@ -176,7 +190,10 @@ function MainTable:recalc_table(par_table)
   if t_size == nil then
 	  return
   end
-  
+
+  --clean totals before recalc whole table
+  self:zeroTotalsTable( totals_t )
+
   --update price and PnL
 	while row <= t_size do
 
@@ -197,26 +214,70 @@ function MainTable:recalc_table(par_table)
 				--show last price update time
 				par_table:SetValue(row, 'timeUpdate', tostring(os.date())) 
 				--calculates PnL, set row color according to profit or loss (green or red)
-				recalc:recalcPosition(par_table, row, false)
+				recalc:recalcPosition(par_table, row, false, totals_t)
 			end
 		end
 
 		--show collaterdal for each position
 		self:show_collateral(par_table, row)
 		
-		--[[
-		--show days in position. it must be here!
-		local dateOpen_cell = par_table:GetValue(row,'dateOpen')
-		if dateOpen_cell~=nil then
-			par_table:SetValue(row, 'days',    helper:days_in_position(dateOpen_cell.image,  os.date('%Y-%m-%d'))     )
-		end
-		--]]
-
-		  
-		row=row+1
+    row=row+1
+    
 	end
 
 end
 
---class TQOB - OFZ
---class EQOB - corp bonds
+
+--creates table in memory to keep PnL and collateral
+--example
+--forts_totals_2[row.dim_client_code] = {}
+--forts_totals_2[row.dim_client_code][row.dim_class_code] = {}    
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['collateral'] = 0
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['PnL'] = 0
+function MainTable:createTotalsTable()
+	
+  self.totals_t = {}
+  
+end
+
+function MainTable:addClientToTotalsTable( clientCode )
+	
+  if self.totals_t [ clientCode ] == nil then
+    self.totals_t [ clientCode ] = {}
+  end
+
+end
+
+function MainTable:addClassToTotalsTable( clientCode, classCode )
+	
+  if self.totals_t[ clientCode ] [ classCode ] == nil then
+    self.totals_t[ clientCode ] [ classCode ] = {}
+
+    self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = 0
+    self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
+
+  end
+
+end
+
+function MainTable:addValuesToTotalsTable( clientCode, classCode, collateral, PnL )
+  
+  if collateral ~= nil then
+    self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] + collateral
+  end
+  if PnL ~= nil then
+    self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] + PnL
+  end
+
+end
+
+function MainTable:zeroTotalsTable( totals_t )
+  
+  for clientCode , classes in pairs(totals_t) do
+    for classCode, values in pairs(classes) do
+      values [ 'collateral' ] = 0
+      values [ 'PnL' ] = 0
+    end
+  end
+
+end

@@ -23,10 +23,14 @@ function Settings:Init()
 	
 	self.dark_theme = false
 	
+	--depreciated
 	self.show_total_collateral_on_forts = true		--last rows show totals of collateral on FORTS by client_code
+
+	self.show_totals = true --show total PnL after a class
 	
 	self.columns_visibility = {}
 	
+<<<<<<< HEAD
 <<<<<<< HEAD
 --настройка видимости колонок
   self.columns_visibility["account"]=true
@@ -36,9 +40,15 @@ function Settings:Init()
   self.columns_visibility["account"]=false
 >>>>>>> develop
   self.columns_visibility["depo"]=false --счет Депо для ММВБ
+=======
+  --column visibility settings
+
+  self.columns_visibility["account"]=true
+  self.columns_visibility["depo"]=false --depo account for MICEX
+>>>>>>> develop
   self.columns_visibility["comment"]=false
   self.columns_visibility["secCode"]=true
-  self.columns_visibility["classCode"]=false
+  self.columns_visibility["classCode"]=true
   self.columns_visibility["lot"]=false
   self.columns_visibility["dateOpen"]=true
   self.columns_visibility["timeOpen"]=false

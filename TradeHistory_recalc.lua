@@ -15,8 +15,10 @@ function Recalc:Init()
   
 end
 
---recalculates PnL
-function Recalc:recalcPosition(t, row, isClosed)
+-- recalculates PnL
+-- Parameters
+--  totals_t  - simple lua table. see TradeHistory_table, method createTotalsTable()
+function Recalc:recalcPosition(t, row, isClosed, totals_t)
 
 	if row == nil then
 		return
@@ -103,6 +105,15 @@ function Recalc:recalcPosition(t, row, isClosed)
 
 		--push rub PnL to main table
 		t:SetValue(row, 'profitByTheorPrice', tostring(PnLrub))			
+	end	
+
+	if totals_t ~= nil then
+		--nil may present if we run this function for details of fifo
+
+		local account = t:GetValue(row,'account').image
+		local classCode = t:GetValue(row,'classCode').image
+		
+		maintable:addValuesToTotalsTable( account, classCode, nil, PnLrub )
 	end	
   
 end

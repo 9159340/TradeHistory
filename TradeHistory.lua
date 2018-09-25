@@ -512,6 +512,14 @@ end
 --                  MAIN
 -- +----------------------------------------------------+
 
+-- функци€ обратного вызова дл€ обработки событий в таблице. вызываетс€ из main()
+--(или, другими словами, обработчик клика по таблице робота)
+--параметры:
+--  t_id - хэндл таблицы, полученный функцией AllocTable()
+--  msg - тип событи€, происшедшего в таблице
+--  par1 и par2 Ц значени€ параметров определ€ютс€ типом сообщени€ msg, 
+--
+--функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна
 local f_cb = function( t_id,  msg,  par1, par2)
   --*функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна (проверить)
   if (msg==QTABLE_CLOSE)  then
@@ -659,37 +667,58 @@ end
 --создает таблицу (2-мерный) массив со сделками
 function create_table_trades()
 
---trades[ 11 ] ['flags'] = 64 --покупка
---trades[ 11 ] ['flags'] = 68 --продажа
+	--trades[ 11 ] ['flags'] = 64 --покупка
+	--trades[ 11 ] ['flags'] = 68 --продажа
 
-local trades = {}
+	local trades = {}
 
-local num = 1
+	local num = 1
 
-trades[num] = {}			
-			trades[ num ] ['trade_num'] = 9999999			
-			trades[ num ] ['order_num'] = 0		--число!	
-			trades[ num ] ['brokerref'] = ''			
-			trades[ num ] ['price'] = 59.325			
-			trades[ num ] ['qty'] = 2			
-			trades[ num ] ['value'] = 118650			
-			trades[ num ] ['flags'] = 68			
-			trades[ num ] ['client_code'] = '99221FX'			
-			trades[ num ] ['trade_currency'] = 'SUR'			
-			trades[ num ] ['sec_code'] = 'USD000UTSTOM'			
-			trades[ num ] ['class_code'] = 'CETS'			
-			trades[ num ] ['exchange_comission'] = 0			
-			trades[ num ] ['trans_id'] = 0			
-			trades[ num ] ['accruedint'] = 0			
-			trades[ num ] ['datetime'] = {day=24, month=05,year=2018,hour=18,min=15,sec=19 }
-			
-			trades[ num ] ['operation'] = 'sell' --there are no that field in original trade table. 
-			
-			
+	trades[ num]  = {}			
+	trades[ num ] ['trade_num'] 			= 172429835				--здесь число!
+	trades[ num ] ['order_num'] 			= 0				--здесь число!		
+	trades[ num ] ['brokerref'] 			= ''			--не заполн€ть	
+	trades[ num ] ['price'] 				= 73.895 		--здесь число!
+	trades[ num ] ['qty'] 					= 1				--здесь число!
+	trades[ num ] ['value'] 				= 73895			--здесь число!
+	trades[ num ] ['flags'] 				= 68			--здесь число! 64 buy/ 68 sell
+	trades[ num ] ['client_code'] 			= '99999FX'
+	trades[ num ] ['trade_currency'] 		= 'SUR'			
+	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOM'			
+	trades[ num ] ['class_code'] 			= 'CETS'			
+	trades[ num ] ['exchange_comission'] 	= 0				--здесь число!
+	trades[ num ] ['trans_id'] 				= 0				--здесь число			
+	trades[ num ] ['accruedint'] 			= 0				--здесь число!
+	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
+	trades[ num ] ['operation'] 			= 'sell' 		--this field is not present in original trade table. 
+	trades[ num ] ['account'] 				= '123'		--строка, код депо
+	
+num = num+1
+	
+
+	trades[ num]  = {}			
+	trades[ num ] ['trade_num'] 			= 172429836				--здесь число!
+	trades[ num ] ['order_num'] 			= 0				--здесь число!		
+	trades[ num ] ['brokerref'] 			= ''			--не заполн€ть	
+	trades[ num ] ['price'] 				= 73.895 		--здесь число!
+	trades[ num ] ['qty'] 					= 1				--здесь число!
+	trades[ num ] ['value'] 				= 73895			--здесь число!
+	trades[ num ] ['flags'] 				= 64			--здесь число! 64 buy/ 68 sell
+	trades[ num ] ['client_code'] 			= '99999FX'
+	trades[ num ] ['trade_currency'] 		= 'SUR'			
+	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOD'			
+	trades[ num ] ['class_code'] 			= 'CETS'			
+	trades[ num ] ['exchange_comission'] 	= 0				--здесь число!
+	trades[ num ] ['trans_id'] 				= 0				--здесь число			
+	trades[ num ] ['accruedint'] 			= 0				--здесь число!
+	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
+	trades[ num ] ['operation'] 			= 'buy' 		--this field is not present in original trade table. 
+	trades[ num ] ['account'] 				= '123'		--строка, код депо	
+	
 	return trades			
 end
 
---функци€ проводит по фифо сделки из таблицы, сохраненной в текст
+--функци€ проводит по фифо искусственные сделки из таблицы. см. функцию create_table_trades()
 function process_fifo_manual_deals()
 
 	local trades = create_table_trades()
@@ -708,13 +737,15 @@ function process_fifo_manual_deals()
 	for key, trade in pairs ( trades ) do
 		fifo:makeFifo(trade)
 		i=i+1
-		message(trade.trade_num..'-'..tostring(i))
-		
+		message(tostring(i)..' trade has been processed. # ' .. trade.trade_num)
 	end		
 end
 
+--trades[ 11 ] ['flags'] = 64 --покупка
+--trades[ 11 ] ['flags'] = 68 --продажа
 
-function process_fifo_manual_deals_from_table_deals()
+--провести по фифо сделки, которые уже есть в базе. перед этим их модифицируем
+function pro_cess_fifo_manual_deals_from_table_deals()
 
 	local k = "'"
 	local sql = 'SELECT *  FROM	deals WHERE date = '..k..'2017-05-10'..k ..' AND trade_num = 0000000000 ORDER BY trade_num'

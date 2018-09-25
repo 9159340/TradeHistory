@@ -23,17 +23,20 @@ function Settings:Init()
 	
 	self.dark_theme = false
 	
+	--depreciated
 	self.show_total_collateral_on_forts = true		--last rows show totals of collateral on FORTS by client_code
+
+	self.show_totals = true --show total PnL after a class
 	
 	self.columns_visibility = {}
 	
---column visibility settings
+  --column visibility settings
 
-  self.columns_visibility["account"]=false
-  self.columns_visibility["depo"]=false --счет Депо для ММВБ
+  self.columns_visibility["account"]=true
+  self.columns_visibility["depo"]=false --depo account for MICEX
   self.columns_visibility["comment"]=false
   self.columns_visibility["secCode"]=true
-  self.columns_visibility["classCode"]=false
+  self.columns_visibility["classCode"]=true
   self.columns_visibility["lot"]=false
   self.columns_visibility["dateOpen"]=false
   self.columns_visibility["timeOpen"]=false
@@ -55,8 +58,8 @@ function Settings:Init()
   self.columns_visibility["days"]=true
   self.columns_visibility["close_price_step"]=false
   self.columns_visibility["close_price_step_price"]=false
-  self.columns_visibility["buyDepo"]=false
-  self.columns_visibility["sellDepo"]=false
+  self.columns_visibility["buyDepo"]=true
+  self.columns_visibility["sellDepo"]=true
   self.columns_visibility["timeUpdate"]=false
   self.columns_visibility["optionType"]=true
   self.columns_visibility["expiration"]=true

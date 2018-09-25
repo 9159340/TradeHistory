@@ -384,3 +384,15 @@ function Helper:get_TheorPrice(par_t, row)
   return res
 
 end
+
+
+--returns profit RUB from table
+function Helper:getProfit(t,row)
+  local res = false
+  local val = nil
+  res, val = check_nil(t, row, 'profit')
+  if res == true then
+	return 0
+  end
+  return val  
+end

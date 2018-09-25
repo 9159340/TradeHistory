@@ -187,50 +187,54 @@ function load_OPEN_Positions()
   maintable.t:SetValue(r, 'profitpt', "CLOSED")
   maintable.t:SetValue(r, 'profit %', "POSITIONS")
   colorizer:colorize_class(maintable.t, r)
+  
   --get the table with positions from fifo
   
-  --first version
-  --local vt = fifo:readOpenFifoPositions() --module TradeHistory_FIFO.lua
-  
-  --если в настройках включено self.groupByClass = true , т.е. группировать строки в главной таблице по классам инструментов
-  --то надо пока сделать 3 класса SPBFUT, SPBOPT, TQBR
-  --потом нужно доделать получение всех классов из бумаг, которые есть на позиции и в цикле по этим классам вывод строк
+  --if self.groupByClass = true then we need to group row by class codes
  
 	local newRow = nil
 	
 	if settings.groupByClass  == true then
 	
-		--сделаем универсально. читаем таблицу с настройками отображения класса и выводим позиции в зависимости от значения параметра (видимость)
-		for k,v in pairs(settings.filter_by_class) do
+		--read class visibility settings from table and show positions according to visibility
+		for class_code_to_show,allow_show_class in pairs(settings.filter_by_class) do
 			
 			newRow = maintable.t:AddLine()
-			maintable.t:SetValue(newRow, 'secCode', k)--добавляем строку с именем класса (ключ таблицы)
+			maintable.t:SetValue(newRow, 'secCode', class_code_to_show)--добавляем строку с именем класса (ключ таблицы)
 			colorizer:colorize_class(maintable.t, newRow)
 			
-			  
-			--SetColor(maintable.t.t_id, newRow, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)					
-			
-			--newRow = maintable.t:AddLine() --delimiter
-			
-			--проверим настройку. если Истина - показываем позиции
-			if v == true then
+			if allow_show_class == true then
 				local total_profit = 0
 				
 				local r_count = 1
-				local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, k, nil, false)
+				local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, class_code_to_show, nil, false, maintable.totals_t)
+
+				--next 2 vars - to track if class has been changed
+				local last_key = ''
+				local current_key = ''
+
 				while r_count <= table.maxn(vt) do
+
+					current_key = getCurrentRowKey( vt[r_count] )
+					
 					addRowFromFIFO(vt[r_count])
+
+					if (last_key ~= current_key and r_count > 1) or r_count == table.maxn(vt) then
+						--add totals row
+						maintable:recalc_table(maintable.t, maintable.totals_t)
+						local maxRow = table.maxn(vt)
+						showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+					end					
+
 					r_count = r_count + 1 
+
+					last_key = current_key
 					
 				end 
-				--выведем итоговую строку с прибылью
-				--это пока сложно сделать:( потому что прибыль рассчитывается в Recalc:recalcPosition(t, row, isClosed)
-				--и нужно придумать, как в том классе определять, где строка с итогами, и как считать тотал по одному классу
-				newRow = maintable.t:AddLine()
-				maintable.t:SetValue(newRow, 'secCode', "total")
 			
-				--добавим пустую строку как разделитель
+				--empty row as delimiter
 				newRow = maintable.t:AddLine()
+
 			end
 			
 		end
@@ -246,32 +250,63 @@ function load_OPEN_Positions()
 			r_count = r_count + 1 
 		end 
 		
-		--добавим строку с общим ГО
-		showTotalCollateralOnForts(forts_totals)
-			
+		maintable:recalc_table(maintable.t, maintable.totals_t)
+		local maxRow = table.maxn(vt)
+		showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+
 	end
 
 
 end
 
---добавляет в главную таблицу строку с итогом по ГО на фортс (только для покупателя)
---forts_totals - таблица с общим ГО, там одна строка
-function showTotalCollateralOnForts(forts_totals)
-			
-	if settings.show_total_collateral_on_forts == true then
-		for k, v in pairs(forts_totals) do
-			if v~= nil and v ~= 0 and v~='' then
-				local row = maintable.t:AddLine()
-				maintable.t:SetValue(row, 'account', k)
-				maintable.t:SetValue(row, 'buyDepo', v)
-			end
-		end
-	end			
-
+-- returns string like that: '714547-SPBOPT'
+function getCurrentRowKey(row)
+	return row.dim_client_code .. '-' .. row.dim_class_code
 end
 
 
--- обработчики событий ----
+-- add row with totals after a class
+function showTotals(totals_t, clientCode, classCode)
+	
+	if settings.show_totals == true then
+	
+		
+		for key, array_level_2 in pairs( totals_t ) do
+			--message ( tostring(key) ) 			-- account. example '714547'
+			--message ( tostring(array_level_2) )	-- table
+
+			if key == clientCode then
+				
+				for key2, array_level_3 in pairs( array_level_2 ) do
+					--message ( tostring(key2) )			-- class code. example 'SPBOPT'
+					--message ( tostring(array_level_3) )	-- table
+
+					if key2 == classCode then
+
+						local row = maintable.t:AddLine()
+						maintable.t:SetValue(row, 'secCode', 'TOTAL')
+		
+						for key3, value4 in pairs( array_level_3 ) do
+							--message ( tostring(key3) )		-- parameter name. example 'collateral', 'PnL'
+							--message ( tostring(value4) )		-- parameter value, amount. example 5432.97
+			
+							if key3 == 'collateral' then
+								maintable.t:SetValue(row, 'buyDepo', value4)
+							
+							elseif key3 == 'PnL' then
+								maintable.t:SetValue(row, 'profit', value4)
+
+							end
+							
+						end
+					end
+				end
+			end
+		end
+	end	
+end
+
+-- event's handlers ----
 
 function OnInit(s)
 
@@ -290,47 +325,49 @@ function OnInit(s)
 	details= Details()
 	details:Init()
 
-  maintable= MainTable()
-  maintable:Init()
+    maintable= MainTable()
+    maintable:Init()
 
-  closedpos=ClosedPos()
-  closedpos:Init()
+    closedpos=ClosedPos()
+    closedpos:Init()
   
 	deals= Deals()
 	deals:Init()
 	
 	actions = Actions()
 	actions:Init()  
-  --create and show table
+	
+	--create and show table
+	maintable:createOwnTable("Trade history : OPEN POSITIONS")
+	maintable:createTotalsTable()
+	maintable:showTable()
+	
+	
   
-  maintable:createOwnTable("Trade history : OPEN POSITIONS")
   
-  maintable:showTable()
-  
-  
-  load_OPEN_Positions()
+    load_OPEN_Positions()
     
 end
 
 
 function DestroyTables()
 
-  --сначала грохнем все детальные таблицы, если есть  
+  --kill details tables (if exists)
   for key, details_table in pairs(details.t) do
     
     if details_table~=nil then
       DestroyTable(details_table.t_id)
     end     
   end
-  --потом закрытые позиции, если есть
+  --kill closed positions tables (if exists)
   if closedpos.t~=nil then
 	DestroyTable(closedpos.t.t_id)
   end
   
-	--затем основную  таблицу
+	--kill main table
 	DestroyTable(maintable.t.t_id)
   
-	--10/05/17 добавилось контекстное меню
+	--10/05/17 context menu has been added
 	if actions.t ~= nil then
 		DestroyTable(actions.t.t_id)
 	end
@@ -352,18 +389,17 @@ function OnTrade(trade)
 
 		deals:insertTradeToDB(trade, robot_id)
 		
-		--порядок не менять!
+		--dont change sequence!
     
-		--добавить информацию о бумаге в таблицу securities
+		--add info about security into 'securities' table
 		fifo:saveSecurityInfo(trade.sec_code, trade.class_code)
 		
-		--добавить позицию в ФИФО
+		--post trade to fifo
 		fifo:makeFifo(trade)
 		
 	end
 
-  --refill robot's table	
-	
+  --refill robot's main table	
 	
 	load_OPEN_Positions()
 	
@@ -374,14 +410,15 @@ end
 -- +----------------------------------------------------+
 
 function recalc_details()
-	--* пересчет таблицы детальных записей по партиям
+	-- recal details by portions
     for key, details_table in pairs(details.t) do
       if details_table~=nil then
         maintable:recalc_table(details_table)
       end    	
     end
 end
---функция закрывает окно таблицы детализации открытых позиций. по нажатию креста и кнопки ESC
+
+--closes details table window. press red cross or ESC
 local f_cb_details = function( t_id,  msg,  par1, par2)
   
   if (msg==QTABLE_CLOSE)  then
@@ -402,7 +439,7 @@ end
 -- +----------------------------------------------------+
 
 local f_cb_closed = function( t_id,  msg,  par1, par2)
-	--*функция закрывает окно таблицы закрытых сделок по нажатию креста и кнопки ESC
+	--closes closed trades table window. press red cross or ESC
 	if msg==QTABLE_CLOSE  then
 		DestroyTable(closedpos.t.t_id)
 	elseif msg==QTABLE_VKEY then
@@ -602,7 +639,7 @@ function main()
   
   while is_run do  
     --обновим PnL в главной таблице
-    maintable:recalc_table(maintable.t)
+    maintable:recalc_table(maintable.t, maintable.totals_t)
     --обновим PnL во всех открытых детальных таблицах
 	recalc_details()
 	--Эмуляция контекстного меню

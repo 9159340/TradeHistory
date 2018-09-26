@@ -166,6 +166,13 @@ function addRowFromFIFO(sqliteRow)
 	
 end
 
+-- add row with totals after a class
+local function addTotalRow()
+	
+	local row = maintable.t:AddLine()
+	maintable.t:SetValue(row, 'secCode', 'TOTAL')
+
+end
 
 --загружает позиции из sqlite
 function load_OPEN_Positions()
@@ -221,9 +228,7 @@ function load_OPEN_Positions()
 
 					if (last_key ~= current_key and r_count > 1) or r_count == table.maxn(vt) then
 						--add totals row
-						
-						local maxRow = table.maxn(vt)
-						addTotalRow(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+						addTotalRow()	
 					end					
 
 					r_count = r_count + 1 
@@ -250,8 +255,7 @@ function load_OPEN_Positions()
 			r_count = r_count + 1 
 		end 
 		
-		local maxRow = table.maxn(vt)
-		addTotalRow(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+		addTotalRow()	
 
 	end
 
@@ -266,13 +270,7 @@ function getCurrentRowKey(row)
 end
 
 
--- add row with totals after a class
-function addTotalRow(totals_t, clientCode, classCode)
-	
-	local row = maintable.t:AddLine()
-	maintable.t:SetValue(row, 'secCode', 'TOTAL')
 
-end
 
 -- event's handlers ----
 
@@ -376,15 +374,6 @@ end
 -- +----------------------------------------------------+
 --                  DETAILS
 -- +----------------------------------------------------+
-
-function recalc_details()
-	-- recal details by portions
-    for key, details_table in pairs(details.t) do
-      if details_table~=nil then
-        maintable:recalc_table(details_table)
-      end    	
-    end
-end
 
 --closes details table window. press red cross or ESC
 local f_cb_details = function( t_id,  msg,  par1, par2)
@@ -539,7 +528,7 @@ local f_cb = function( t_id,  msg,  par1, par2)
 			
 			details:load()
 			
-			recalc_details()
+			details:recalc_details()
 			
 			--чтобы можно было закрыть окно с таблицей - повесим на него обработчик колбэков
 			SetTableNotificationCallback (details.t[details.key].t_id, f_cb_details)
@@ -617,7 +606,7 @@ function main()
     --обновим PnL в главной таблице
     maintable:recalc_table(maintable.t, maintable.totals_t)
     --обновим PnL во всех открытых детальных таблицах
-	recalc_details()
+	details:recalc_details()
 	--Ёмул€ци€ контекстного меню
 	if id_context_to_kill ~= nil then
 		actions:kill(id_context_to_kill)

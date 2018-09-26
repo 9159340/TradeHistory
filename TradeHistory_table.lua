@@ -228,7 +228,7 @@ function MainTable:recalc_table( par_table, totals_t )
         
         local PnLrub = helper:getProfit(par_table,row)
 
-        maintable:addValuesToTotalsTable( account, classCode, buyDepo, PnLrub, accrual )
+        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual )
       end	
     
     end
@@ -250,7 +250,7 @@ function MainTable:recalc_table( par_table, totals_t )
 
 
 
-		--show collaterdal for each position
+		--show collateral for each position
 		self:show_collateral(par_table, row)
 		
     row=row+1
@@ -273,43 +273,44 @@ function MainTable:createTotalsTable()
   
 end
 
-function MainTable:addClientToTotalsTable( clientCode )
+function MainTable:addClientToTotalsTable( totals_t, clientCode )
 	
-  if self.totals_t [ clientCode ] == nil then
-    self.totals_t [ clientCode ] = {}
+  if totals_t [ clientCode ] == nil then
+    totals_t [ clientCode ] = {}
   end
 
 end
 
-function MainTable:addClassToTotalsTable( clientCode, classCode )
+function MainTable:addClassToTotalsTable( totals_t, clientCode, classCode )
 	
-  if self.totals_t[ clientCode ] [ classCode ] == nil then
-    self.totals_t[ clientCode ] [ classCode ] = {}
+  if totals_t[ clientCode ] [ classCode ] == nil then
+    totals_t[ clientCode ] [ classCode ] = {}
 
-    self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = 0
-    self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
-    self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
+    totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = 0
+    totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
+    totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
 
   end
 
 end
 
-function MainTable:addValuesToTotalsTable( clientCode, classCode, collateral, PnL, accrual )
+function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual )
   
-  self:addClientToTotalsTable( clientCode )
-  self:addClassToTotalsTable( clientCode, classCode )
+  self:addClientToTotalsTable( totals_t, clientCode )
+  self:addClassToTotalsTable( totals_t, clientCode, classCode )
 
   if collateral ~= nil then
-    self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] + collateral
+    totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = totals_t[ clientCode ] [ classCode ] [ 'collateral' ] + collateral
   end
   if PnL ~= nil then
-    self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] + PnL
+    totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = totals_t[ clientCode ] [ classCode ] [ 'PnL' ] + PnL
   end
   if accrual ~= nil then
-    self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] + accrual
+    totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = totals_t[ clientCode ] [ classCode ] [ 'accrual' ] + accrual
   end
 
 end
+
 
 function MainTable:zeroTotalsTable( totals_t )
   
@@ -327,7 +328,7 @@ end
 
 -- searches row in totals table
 -- return: table with 2 field: collateral and PnL 
-function MainTable:findTotalsByClass(totals_t, clientCode, classCode)
+function MainTable:findTotalsByClass( totals_t, clientCode, classCode )
 	
     local retArray = {}
     

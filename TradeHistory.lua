@@ -221,9 +221,9 @@ function load_OPEN_Positions()
 
 					if (last_key ~= current_key and r_count > 1) or r_count == table.maxn(vt) then
 						--add totals row
-						maintable:recalc_table(maintable.t, maintable.totals_t)
+						
 						local maxRow = table.maxn(vt)
-						showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+						addTotalRow(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
 					end					
 
 					r_count = r_count + 1 
@@ -250,11 +250,12 @@ function load_OPEN_Positions()
 			r_count = r_count + 1 
 		end 
 		
-		maintable:recalc_table(maintable.t, maintable.totals_t)
 		local maxRow = table.maxn(vt)
-		showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+		addTotalRow(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
 
 	end
+
+	maintable:recalc_table(maintable.t, maintable.totals_t)
 
 
 end
@@ -266,44 +267,11 @@ end
 
 
 -- add row with totals after a class
-function showTotals(totals_t, clientCode, classCode)
+function addTotalRow(totals_t, clientCode, classCode)
 	
-	if settings.show_totals == true then
-	
-		
-		for key, array_level_2 in pairs( totals_t ) do
-			--message ( tostring(key) ) 			-- account. example '714547'
-			--message ( tostring(array_level_2) )	-- table
+	local row = maintable.t:AddLine()
+	maintable.t:SetValue(row, 'secCode', 'TOTAL')
 
-			if key == clientCode then
-				
-				for key2, array_level_3 in pairs( array_level_2 ) do
-					--message ( tostring(key2) )			-- class code. example 'SPBOPT'
-					--message ( tostring(array_level_3) )	-- table
-
-					if key2 == classCode then
-
-						local row = maintable.t:AddLine()
-						maintable.t:SetValue(row, 'secCode', 'TOTAL')
-		
-						for key3, value4 in pairs( array_level_3 ) do
-							--message ( tostring(key3) )		-- parameter name. example 'collateral', 'PnL'
-							--message ( tostring(value4) )		-- parameter value, amount. example 5432.97
-			
-							if key3 == 'collateral' then
-								maintable.t:SetValue(row, 'buyDepo', value4)
-							
-							elseif key3 == 'PnL' then
-								maintable.t:SetValue(row, 'profit', value4)
-
-							end
-							
-						end
-					end
-				end
-			end
-		end
-	end	
 end
 
 -- event's handlers ----

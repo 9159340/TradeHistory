@@ -214,9 +214,41 @@ function MainTable:recalc_table( par_table, totals_t )
 				--show last price update time
 				par_table:SetValue(row, 'timeUpdate', tostring(os.date())) 
 				--calculates PnL, set row color according to profit or loss (green or red)
-				recalc:recalcPosition(par_table, row, false, totals_t)
-			end
-		end
+				recalc:recalcPosition(par_table, row, false)
+      end
+
+      --recalc totals in any case, whether price has been changed or not
+      if totals_t ~= nil then
+        --nil may present if we run this function for details of fifo
+    
+        local account = par_table:GetValue(row,'account').image
+        local classCode = par_table:GetValue(row,'classCode').image
+        local accrual = tonumber(par_table:GetValue(row,'accrual').image)
+        local buyDepo = tonumber(par_table:GetValue(row,'buyDepo').image)
+        
+        local PnLrub = helper:getProfit(par_table,row)
+
+        maintable:addValuesToTotalsTable( account, classCode, buyDepo, PnLrub, accrual )
+      end	
+    
+    end
+    
+    
+    -- update values in TOTAL rows
+    if par_table:GetValue(row,'secCode').image == 'TOTAL' then
+
+      local classCode = par_table:GetValue(row-1,'classCode').image
+      local clientCode = par_table:GetValue(row-1,'account').image
+
+      totalsArray = maintable:findTotalsByClass(totals_t, clientCode, classCode)
+
+      par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
+      par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
+      par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
+
+    end
+
+
 
 		--show collaterdal for each position
 		self:show_collateral(par_table, row)
@@ -234,6 +266,7 @@ end
 --forts_totals_2[row.dim_client_code][row.dim_class_code] = {}    
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['collateral'] = 0
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['PnL'] = 0
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['accrual'] = 0
 function MainTable:createTotalsTable()
 	
   self.totals_t = {}
@@ -255,18 +288,25 @@ function MainTable:addClassToTotalsTable( clientCode, classCode )
 
     self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = 0
     self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
+    self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
 
   end
 
 end
 
-function MainTable:addValuesToTotalsTable( clientCode, classCode, collateral, PnL )
+function MainTable:addValuesToTotalsTable( clientCode, classCode, collateral, PnL, accrual )
   
+  self:addClientToTotalsTable( clientCode )
+  self:addClassToTotalsTable( clientCode, classCode )
+
   if collateral ~= nil then
     self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = self.totals_t[ clientCode ] [ classCode ] [ 'collateral' ] + collateral
   end
   if PnL ~= nil then
     self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = self.totals_t[ clientCode ] [ classCode ] [ 'PnL' ] + PnL
+  end
+  if accrual ~= nil then
+    self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = self.totals_t[ clientCode ] [ classCode ] [ 'accrual' ] + accrual
   end
 
 end
@@ -277,7 +317,52 @@ function MainTable:zeroTotalsTable( totals_t )
     for classCode, values in pairs(classes) do
       values [ 'collateral' ] = 0
       values [ 'PnL' ] = 0
+      values [ 'accrual' ] = 0
     end
   end
 
+end
+
+
+
+-- searches row in totals table
+-- return: table with 2 field: collateral and PnL 
+function MainTable:findTotalsByClass(totals_t, clientCode, classCode)
+	
+    local retArray = {}
+    
+		for key, array_level_2 in pairs( totals_t ) do
+			--message ( tostring(key) ) 			-- account. example '714547'
+			--message ( tostring(array_level_2) )	-- table
+
+			if key == clientCode then
+				
+				for key2, array_level_3 in pairs( array_level_2 ) do
+					--message ( tostring(key2) )			-- class code. example 'SPBOPT'
+					--message ( tostring(array_level_3) )	-- table
+
+					if key2 == classCode then
+
+		
+						for key3, value4 in pairs( array_level_3 ) do
+							--message ( tostring(key3) )		-- parameter name. example 'collateral', 'PnL'
+							--message ( tostring(value4) )		-- parameter value, amount. example 5432.97
+			
+							if key3 == 'collateral' then
+								retArray['buyDepo']=value4
+							
+							elseif key3 == 'PnL' then
+								retArray['profit']=value4
+
+							elseif key3 == 'accrual' then
+								retArray['accrual']=value4
+
+              end
+							
+						end
+					end
+				end
+			end
+		end
+	return retArray	
 end

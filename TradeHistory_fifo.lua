@@ -617,19 +617,6 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 		vt[r_count]['timeOpen']=row.timeOpen
 		vt[r_count]['lot'] = row.lot      
 
-		if settings.show_totals == true then
-      collateral = helper:buy_depo(row.dim_class_code, row.dim_sec_code) * row.qty --has sense only for FORTS
-				
-      if totals_t ~= nil then
-        --nil may present if we run this function for details of fifo
-        maintable:addClientToTotalsTable( row.dim_client_code )
-        maintable:addClassToTotalsTable( row.dim_client_code, row.dim_class_code )
-          
-        maintable:addValuesToTotalsTable( row.dim_client_code, row.dim_class_code, collateral, 0 )
-      end
-
-		end		
-			
 		r_count = r_count + 1
 	end      
 

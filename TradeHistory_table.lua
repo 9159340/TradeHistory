@@ -235,20 +235,19 @@ function MainTable:recalc_table( par_table, totals_t )
     
     
     -- update values in TOTAL rows
-    if par_table:GetValue(row,'secCode').image == 'TOTAL' then
+    if par_table:GetValue(row,'secCode')~=nil then
+      if par_table:GetValue(row,'secCode').image == 'TOTAL' then
 
-      local classCode = par_table:GetValue(row-1,'classCode').image
-      local clientCode = par_table:GetValue(row-1,'account').image
+        local classCode = par_table:GetValue(row-1,'classCode').image
+        local clientCode = par_table:GetValue(row-1,'account').image
 
-      totalsArray = maintable:findTotalsByClass(totals_t, clientCode, classCode)
+        totalsArray = maintable:findTotalsByClass(totals_t, clientCode, classCode)
 
-      par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
-      par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
-      par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
-
+        par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
+        par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
+        par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
+      end
     end
-
-
 
 		--show collateral for each position
 		self:show_collateral(par_table, row)

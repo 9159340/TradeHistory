@@ -164,16 +164,22 @@ function addRowFromFIFO(sqliteRow)
 	
 end
 
+-- add row with totals after a class
+local function addTotalRow()
+	
+	local row = maintable.t:AddLine()
+	maintable.t:SetValue(row, 'secCode', 'TOTAL')
 
---загружает позиции из sqlite
+end
+
+--load open positions from sqlite database
 function load_OPEN_Positions()
 
 	maintable:clearTable()
 	
-  --открытые позиции
-  
   local r = maintable.t:AddLine()
-  --заголовок открытых позиций
+  
+  --header
   
   maintable.t:SetValue(r, 'dateOpen', "OPEN")
   maintable.t:SetValue(r, 'timeOpen', "POSITIONS")
@@ -219,9 +225,7 @@ function load_OPEN_Positions()
 
 					if (last_key ~= current_key and r_count > 1) or r_count == table.maxn(vt) then
 						--add totals row
-						maintable:recalc_table(maintable.t, maintable.totals_t)
-						local maxRow = table.maxn(vt)
-						showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+						addTotalRow()	
 					end					
 
 					r_count = r_count + 1 
@@ -248,11 +252,11 @@ function load_OPEN_Positions()
 			r_count = r_count + 1 
 		end 
 		
-		maintable:recalc_table(maintable.t, maintable.totals_t)
-		local maxRow = table.maxn(vt)
-		showTotals(maintable.totals_t, vt[maxRow].dim_client_code , vt[maxRow].dim_class_code)	
+		addTotalRow()	
 
 	end
+
+	maintable:recalc_table(maintable.t, maintable.totals_t)
 
 
 end
@@ -263,46 +267,7 @@ function getCurrentRowKey(row)
 end
 
 
--- add row with totals after a class
-function showTotals(totals_t, clientCode, classCode)
-	
-	if settings.show_totals == true then
-	
-		
-		for key, array_level_2 in pairs( totals_t ) do
-			--message ( tostring(key) ) 			-- account. example '714547'
-			--message ( tostring(array_level_2) )	-- table
 
-			if key == clientCode then
-				
-				for key2, array_level_3 in pairs( array_level_2 ) do
-					--message ( tostring(key2) )			-- class code. example 'SPBOPT'
-					--message ( tostring(array_level_3) )	-- table
-
-					if key2 == classCode then
-
-						local row = maintable.t:AddLine()
-						maintable.t:SetValue(row, 'secCode', 'TOTAL')
-		
-						for key3, value4 in pairs( array_level_3 ) do
-							--message ( tostring(key3) )		-- parameter name. example 'collateral', 'PnL'
-							--message ( tostring(value4) )		-- parameter value, amount. example 5432.97
-			
-							if key3 == 'collateral' then
-								maintable.t:SetValue(row, 'buyDepo', value4)
-							
-							elseif key3 == 'PnL' then
-								maintable.t:SetValue(row, 'profit', value4)
-
-							end
-							
-						end
-					end
-				end
-			end
-		end
-	end	
-end
 
 -- event's handlers ----
 
@@ -339,10 +304,7 @@ function OnInit(s)
 	maintable:createOwnTable("Trade history : OPEN POSITIONS")
 	maintable:createTotalsTable()
 	maintable:showTable()
-	
-	
-  
-  
+
     load_OPEN_Positions()
     
 end
@@ -405,8 +367,7 @@ end
 
 --details
 
-<<<<<<< HEAD
---функция закрывает окно таблицы детализации открытых позиций. по нажатию креста и кнопки ESC
+--closes details windows on press ESC and standart closing button (X)
 =======
 function recalc_details()
 	-- recal details by portions
@@ -417,6 +378,8 @@ function recalc_details()
     end
 end
 
+=======
+>>>>>>> develop
 --closes details table window. press red cross or ESC
 >>>>>>> develop
 local f_cb_details = function( t_id,  msg,  par1, par2)
@@ -438,19 +401,11 @@ end
 
 --функция закрывает окно таблицы закрытых сделок. по нажатию креста и кнопки ESC
 local f_cb_closed = function( t_id,  msg,  par1, par2)
-<<<<<<< HEAD
-  
-  if (msg==QTABLE_CLOSE)  then
-    DestroyTable(closedpos.t.t_id)
-  end
-  
-	if msg==QTABLE_VKEY then
-=======
+
 	--closes closed trades table window. press red cross or ESC
 	if msg==QTABLE_CLOSE  then
 		DestroyTable(closedpos.t.t_id)
 	elseif msg==QTABLE_VKEY then
->>>>>>> develop
 		--message(par2)
 		if par2 == 27 then -- esc
 			DestroyTable(closedpos.t.t_id)
@@ -579,7 +534,7 @@ local f_cb = function( t_id,  msg,  par1, par2)
 			
 			details:load()
 			
-			recalc_details()
+			details:recalc_details()
 			
 			--чтобы можно было закрыть окно с таблицей - повесим на него обработчик колбэков
 			SetTableNotificationCallback (details.t[details.key].t_id, f_cb_details)
@@ -657,7 +612,7 @@ function main()
     --обновим PnL в главной таблице
     maintable:recalc_table(maintable.t, maintable.totals_t)
     --обновим PnL во всех открытых детальных таблицах
-	recalc_details()
+	details:recalc_details()
 	--Эмуляция контекстного меню
 	if id_context_to_kill ~= nil then
 		actions:kill(id_context_to_kill)
@@ -690,7 +645,7 @@ function create_table_trades()
 	trades[ num ] ['qty'] 					= 1				--здесь число!
 	trades[ num ] ['value'] 				= 73895			--здесь число!
 	trades[ num ] ['flags'] 				= 68			--здесь число! 64 buy/ 68 sell
-	trades[ num ] ['client_code'] 			= '72995FX'
+	trades[ num ] ['client_code'] 			= '99999FX'
 	trades[ num ] ['trade_currency'] 		= 'SUR'			
 	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOM'			
 	trades[ num ] ['class_code'] 			= 'CETS'			
@@ -699,7 +654,7 @@ function create_table_trades()
 	trades[ num ] ['accruedint'] 			= 0				--здесь число!
 	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
 	trades[ num ] ['operation'] 			= 'sell' 		--this field is not present in original trade table. 
-	trades[ num ] ['account'] 				= 'MB0139600594'		--строка, код депо
+	trades[ num ] ['account'] 				= '123'		--строка, код депо
 	
 num = num+1
 	
@@ -712,7 +667,7 @@ num = num+1
 	trades[ num ] ['qty'] 					= 1				--здесь число!
 	trades[ num ] ['value'] 				= 73895			--здесь число!
 	trades[ num ] ['flags'] 				= 64			--здесь число! 64 buy/ 68 sell
-	trades[ num ] ['client_code'] 			= '72995FX'
+	trades[ num ] ['client_code'] 			= '99999FX'
 	trades[ num ] ['trade_currency'] 		= 'SUR'			
 	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOD'			
 	trades[ num ] ['class_code'] 			= 'CETS'			
@@ -721,7 +676,7 @@ num = num+1
 	trades[ num ] ['accruedint'] 			= 0				--здесь число!
 	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
 	trades[ num ] ['operation'] 			= 'buy' 		--this field is not present in original trade table. 
-	trades[ num ] ['account'] 				= 'MB0139600594'		--строка, код депо	
+	trades[ num ] ['account'] 				= '123'		--строка, код депо	
 	
 	return trades			
 end

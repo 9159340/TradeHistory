@@ -141,6 +141,10 @@ function Helper:getPriceOpen(t,row)
   return val
 end
 
+-- parameters
+--  t - table - main table of robot
+--  row - number - number of row in table
+--  column - string - name of column in table
 function check_nil(t, row, column)
   if t == nil then
 	return true, nil
@@ -351,6 +355,9 @@ function Helper:sell_depo(class, sec)
 end			
 
 --returns theor price from table
+-- parameters
+--  t - table - main table of robot
+--  row - number - number of row in table
 function Helper:getTheorPrice(t,row)
   local res = false
   local val = nil
@@ -387,6 +394,9 @@ end
 
 
 --returns profit RUB from table
+-- parameters
+--  t - table - main table of robot
+--  row - number - number of row in table
 function Helper:getProfit(t,row)
   local res = false
   local val = nil

@@ -568,19 +568,19 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 
 	--helper:save_sql_to_file(sql, 'open_pos.sql')
 
-  local forts_totals = nil
-  local forts_totals_2 = nil
 
-  if settings.show_total_collateral_on_forts == true then
-    --forts_totals - 1-dimension array - we will put there 'dim_client_code' as a key
-    -- and a number as an amount of collateral. example: forts_totals['43G07K'] = 12550
-		forts_totals = {}
-	end
+
+
+  
+  
+  
+
+
 	
 	--this function returns simple lua table
 	local vt = {}
 
-  local collateral = 0
+    local collateral = 0
 
 	local r_count = 1
 	for row in self.db:nrows(sql) do 
@@ -617,19 +617,6 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 		vt[r_count]['timeOpen']=row.timeOpen
 		vt[r_count]['lot'] = row.lot      
 
-		if settings.show_totals == true then
-      collateral = helper:buy_depo(row.dim_class_code, row.dim_sec_code) * row.qty --has sense only for FORTS
-				
-      if totals_t ~= nil then
-        --nil may present if we run this function for details of fifo
-        maintable:addClientToTotalsTable( row.dim_client_code )
-        maintable:addClassToTotalsTable( row.dim_client_code, row.dim_class_code )
-          
-        maintable:addValuesToTotalsTable( row.dim_client_code, row.dim_class_code, collateral, 0 )
-      end
-
-		end		
-			
 		r_count = r_count + 1
 	end      
 

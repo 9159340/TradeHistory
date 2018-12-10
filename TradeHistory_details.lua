@@ -1,11 +1,8 @@
---этот класс отображает детали открытой позиции, т.е. сделок, из которых она состоит
---он создает новую визуальную таблицу, структура которой аналогична главной таблице.
+--this class shows detail of open position, i.e. deals of which it consists of
+--this class creates new visual table. its structure is similar to main table
 
 helper = {}
-settings = {}
-colorizer = {}
 fifo = {}
-recalc = {}
 maintable = {}--класс для работы с таблицами на форме квика
 
 Details = class(function(acc)
@@ -16,17 +13,8 @@ function Details:Init()
   helper=Helper()
   helper:Init()
   
-  settings= Settings()
-  settings:Init()
-  
-  colorizer=Colorizer()
-  colorizer:Init()
-  
   fifo=FIFO()
   fifo:Init()
-
-  recalc= Recalc()
-  recalc:Init()
 
   maintable= MainTable()
   maintable:Init()
@@ -43,14 +31,17 @@ function Details:Init()
   self.t = {}
   self.key = nil
 
+  self.totals_t = {}
+
 end
 
+-- event handler: OnLoad
 function Details:load()
 
   self.key = self.sec_code..'-'..self.class_code..'-'..self.account
   
   local t = maintable:createTable("OPEN POSITION DETAILS: "..self.sec_code)
-  
+
   self.t[self.key] = t
   
   t:Show()
@@ -61,22 +52,16 @@ end
 
 function Details:loadPositions()
 
-  --открытые позиции
-  
+  --header
   local r = self.t[self.key]:AddLine()
-  --заголовок открытых позиций
-  
   self.t[self.key]:SetValue(r, 'dateOpen', "DETAILS")
-  
-  
+
+  --load positions
   self:loadOpenFifoPositions()
-  
   
 end
 
---  ОТОБРАЖЕНИЕ ДАННЫХ ИЗ ФИФО В ТАБЛИЦУ РОБОТА
-
---добавляет одну строку в открытые позиции
+--add 1 row from FIFO to open positions table
 function Details:addRowFromFIFO(sqliteRow)
 
 	local row = self.t[self.key]:AddLine()
@@ -120,7 +105,7 @@ function Details:addRowFromFIFO(sqliteRow)
 		self.t[self.key]:SetValue(row, 'amount', tostring(SEC_FACE_VALUE * sqliteRow.qty * sqliteRow.price / 100))
 	end      
 	
-	--покажем тип опциона
+	--show option type
 	local optionType = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'optiontype')
 	if optionType ~= nil then
 		optionType = optionType.param_image
@@ -130,7 +115,7 @@ function Details:addRowFromFIFO(sqliteRow)
 	
 	self.t[self.key]:SetValue(row, 'optionType', optionType)	
 	
-	--покажем теор цену опциона
+	--show option theor price
 	local theorprice = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'theorprice')
 	if theorprice ~= nil then
 		theorprice = theorprice.param_image
@@ -140,7 +125,7 @@ function Details:addRowFromFIFO(sqliteRow)
 	
 	self.t[self.key]:SetValue(row, 'theorPrice', theorprice)
 	
-	--покажем дату экспирации инструмента
+	--show expiration date
 	local expiration = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'expdate')
 	if expiration ~= nil then
 		expiration = expiration.param_image
@@ -152,35 +137,46 @@ function Details:addRowFromFIFO(sqliteRow)
 	
 end
 
---добавляет все открытые позиции в таблицу робота
+-- add row with totals after a class
+function Details:addTotalRow_details( quantity )
+
+	local row = self.t[self.key]:AddLine()
+	self.t[self.key]:SetValue(row, 'secCode', 'TOTAL')
+	self.t[self.key]:SetValue(row, 'quantity',  tostring(quantity) )
+
+end
+
+--add open positions to the robot details table
 --Parameters:
 function Details:loadOpenFifoPositions()
 
   --get the table with positions from fifo
   
-  --local vt = fifo:readOpenFifoPositions() --module TradeHistory_FIFO.lua
-  
-  local vt, forts_totals = fifo:readOpenFifoPositions_ver2(self.sec_code, self.class_code, self.account, true) --module TradeHistory_FIFO.lua
+  local vt = fifo:readOpenFifoPositions_ver2(self.sec_code, self.class_code, self.account, true) --module TradeHistory_FIFO.lua
   
   local r_count = 1
   
+  local quantity = 0
+  
   while r_count <= table.maxn(vt) do
     
-    self:addRowFromFIFO(vt[r_count])
+    self:addRowFromFIFO( vt[r_count] )
     
-    r_count = r_count + 1 
-  end
-    
-	--show total collateral on forts
-	if settings.show_total_collateral_on_forts == true then
-		for k, v in pairs(forts_totals) do
-			if v~= nil and v ~= 0 and v~='' then
-				local row = self.t[self.key]:AddLine()
-				self.t[self.key]:SetValue(row, 'account', k)
-				self.t[self.key]:SetValue(row, 'buyDepo', v)
-			end
-		end
-	end	
+	quantity = quantity + vt[r_count].qty
 	
+    r_count = r_count + 1
+	
+  end
+
+  self:addTotalRow_details( quantity )	
+
 end
 
+function Details:recalc_details()
+	-- recal details by portions
+    for key, details_table in pairs(self.t) do
+      if details_table~=nil then
+        maintable:recalc_table(details_table, self.totals_t)
+      end    	
+    end
+end

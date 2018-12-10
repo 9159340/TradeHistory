@@ -138,10 +138,11 @@ function Details:addRowFromFIFO(sqliteRow)
 end
 
 -- add row with totals after a class
-function Details:addTotalRow_details()
+function Details:addTotalRow_details( quantity )
 
 	local row = self.t[self.key]:AddLine()
 	self.t[self.key]:SetValue(row, 'secCode', 'TOTAL')
+	self.t[self.key]:SetValue(row, 'quantity',  tostring(quantity) )
 
 end
 
@@ -151,20 +152,23 @@ function Details:loadOpenFifoPositions()
 
   --get the table with positions from fifo
   
-  --local vt = fifo:readOpenFifoPositions() --module TradeHistory_FIFO.lua
-  
   local vt = fifo:readOpenFifoPositions_ver2(self.sec_code, self.class_code, self.account, true) --module TradeHistory_FIFO.lua
   
   local r_count = 1
   
+  local quantity = 0
+  
   while r_count <= table.maxn(vt) do
     
-    self:addRowFromFIFO(vt[r_count])
+    self:addRowFromFIFO( vt[r_count] )
     
-    r_count = r_count + 1 
+	quantity = quantity + vt[r_count].qty
+	
+    r_count = r_count + 1
+	
   end
 
-  self:addTotalRow_details()	
+  self:addTotalRow_details( quantity )	
 
 end
 

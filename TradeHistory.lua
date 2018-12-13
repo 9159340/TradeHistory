@@ -208,9 +208,10 @@ function load_OPEN_Positions()
 			
 			newRow = maintable.t:AddLine()
 			maintable.t:SetValue(newRow, 'secCode', class_code_to_show)--добавляем строку с именем класса (ключ таблицы)
-			colorizer:colorize_class(maintable.t, newRow)
+			colorizer:colorize_class(maintable.t, newRow)			
 			
 			if allow_show_class == true then
+			
 				local total_profit = 0
 				
 				local r_count = 1
@@ -220,20 +221,31 @@ function load_OPEN_Positions()
 				local last_key = ''
 				local current_key = ''
 
-				while r_count <= table.maxn(vt) do
+				local table_size = table.maxn(vt)
+				--message('class_code_to_show '.. class_code_to_show ..', table_size = ' .. tostring(table_size) )
 
-					current_key = getCurrentRowKey( vt[r_count] )
+				while r_count <= table_size do
 					
+					current_key = getCurrentRowKey( vt[r_count] )
+
+					--message(tostring(r_count) .. vt[r_count].dim_class_code .. ' current key ' ..current_key)
+
 					addRowFromFIFO(vt[r_count])
 
-					if (last_key ~= current_key and r_count > 1) or r_count == table.maxn(vt) then
-						--add totals row
-						addTotalRow()	
-					end					
+					last_key = current_key
 
 					r_count = r_count + 1 
+					
+					if r_count > table_size then
+						addTotalRow()
+						do break end
+					end
 
-					last_key = current_key
+					if last_key ~= getCurrentRowKey( vt[r_count] ) then
+						--add totals row
+						addTotalRow()	
+						current_key = getCurrentRowKey( vt[r_count] )
+					end	
 					
 				end 
 			
@@ -619,58 +631,38 @@ end
 
 
 
---импорт в фифо из таблицы сделок, сохраненных в текст
+--import manual trades to fifo
 
---создает таблицу (2-мерный) массив со сделками
+--creates manual table
 function create_table_trades()
 
-	--trades[ 11 ] ['flags'] = 64 --покупка
-	--trades[ 11 ] ['flags'] = 68 --продажа
+	--trades[ 11 ] ['flags'] = 64 --buy
+	--trades[ 11 ] ['flags'] = 68 --sell
 
 	local trades = {}
 
 	local num = 1
 
 	trades[ num]  = {}			
-	trades[ num ] ['trade_num'] 			= 172429835				--здесь число!
-	trades[ num ] ['order_num'] 			= 0				--здесь число!		
-	trades[ num ] ['brokerref'] 			= ''			--не заполнять	
-	trades[ num ] ['price'] 				= 73.895 		--здесь число!
-	trades[ num ] ['qty'] 					= 1				--здесь число!
-	trades[ num ] ['value'] 				= 73895			--здесь число!
-	trades[ num ] ['flags'] 				= 68			--здесь число! 64 buy/ 68 sell
-	trades[ num ] ['client_code'] 			= '99999FX'
+	trades[ num ] ['trade_num'] 			= 9997			--decimal
+	trades[ num ] ['order_num'] 			= 0				--decimal
+	trades[ num ] ['brokerref'] 			= ''			--do not fill
+	trades[ num ] ['price'] 				= 61.96 		--decimal
+	trades[ num ] ['qty'] 					= 1				--decimal
+	trades[ num ] ['value'] 				= 61960			--decimal
+	trades[ num ] ['flags'] 				= 68			--decimal 64 buy/ 68 sell
+	trades[ num ] ['client_code'] 			= 'asf'
 	trades[ num ] ['trade_currency'] 		= 'SUR'			
-	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOM'			
+	trades[ num ] ['sec_code'] 				= 'asf'			
 	trades[ num ] ['class_code'] 			= 'CETS'			
-	trades[ num ] ['exchange_comission'] 	= 0				--здесь число!
-	trades[ num ] ['trans_id'] 				= 0				--здесь число			
-	trades[ num ] ['accruedint'] 			= 0				--здесь число!
-	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
+	trades[ num ] ['exchange_comission'] 	= 0				--decimal
+	trades[ num ] ['trans_id'] 				= 0				--decimal
+	trades[ num ] ['accruedint'] 			= 0				--decimal
+	trades[ num ] ['datetime'] 				= {day=25, month=10,year=2018,hour=10,min=00,sec=07 }
 	trades[ num ] ['operation'] 			= 'sell' 		--this field is not present in original trade table. 
-	trades[ num ] ['account'] 				= '123'		--строка, код депо
+	trades[ num ] ['account'] 				= 'asdf'		--string, depo code
 	
-num = num+1
 	
-
-	trades[ num]  = {}			
-	trades[ num ] ['trade_num'] 			= 172429836				--здесь число!
-	trades[ num ] ['order_num'] 			= 0				--здесь число!		
-	trades[ num ] ['brokerref'] 			= ''			--не заполнять	
-	trades[ num ] ['price'] 				= 73.895 		--здесь число!
-	trades[ num ] ['qty'] 					= 1				--здесь число!
-	trades[ num ] ['value'] 				= 73895			--здесь число!
-	trades[ num ] ['flags'] 				= 64			--здесь число! 64 buy/ 68 sell
-	trades[ num ] ['client_code'] 			= '99999FX'
-	trades[ num ] ['trade_currency'] 		= 'SUR'			
-	trades[ num ] ['sec_code'] 				= 'EUR_RUB__TOD'			
-	trades[ num ] ['class_code'] 			= 'CETS'			
-	trades[ num ] ['exchange_comission'] 	= 0				--здесь число!
-	trades[ num ] ['trans_id'] 				= 0				--здесь число			
-	trades[ num ] ['accruedint'] 			= 0				--здесь число!
-	trades[ num ] ['datetime'] 				= {day=09, month=08,year=2018,hour=11,min=00,sec=00 }
-	trades[ num ] ['operation'] 			= 'buy' 		--this field is not present in original trade table. 
-	trades[ num ] ['account'] 				= '123'		--строка, код депо	
 	
 	return trades			
 end

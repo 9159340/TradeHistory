@@ -154,7 +154,7 @@ function addRowFromFIFO(sqliteRow)
 	
 	maintable.t:SetValue(row, 'theorPrice', theorprice)	
 	
-	--покажем дату экспирации инструмента
+	--show date of expiration
 	local expiration = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'expdate')
 	if expiration ~= nil then
 		expiration = expiration.param_image
@@ -166,7 +166,7 @@ function addRowFromFIFO(sqliteRow)
 	
 end
 
--- add row with totals after a class
+-- adds row with totals after a class
 local function addTotalRow()
 	
 	local row = maintable.t:AddLine()
@@ -174,15 +174,22 @@ local function addTotalRow()
 
 end
 
---загружает позиции из sqlite
+--adds row for totals with all clients accounts within one class
+local function addGrandTotalRow()
+	
+	local row = maintable.t:AddLine()
+	maintable.t:SetValue(row, 'secCode', 'GRAND TOTAL')
+
+end
+
+--loads open positions from database
 function load_OPEN_Positions()
 
 	maintable:clearTable()
 	
-  --открытые позиции
-  
   local r = maintable.t:AddLine()
-  --заголовок открытых позиций
+
+  --row with header
   
   maintable.t:SetValue(r, 'dateOpen', "OPEN")
   maintable.t:SetValue(r, 'timeOpen', "POSITIONS")
@@ -223,6 +230,8 @@ function load_OPEN_Positions()
 
 				local table_size = table.maxn(vt)
 				--message('class_code_to_show '.. class_code_to_show ..', table_size = ' .. tostring(table_size) )
+				
+				local keysCounter = 1
 
 				while r_count <= table_size do
 					
@@ -243,12 +252,19 @@ function load_OPEN_Positions()
 
 					if last_key ~= getCurrentRowKey( vt[r_count] ) then
 						--add totals row
-						addTotalRow()	
+						
+						addTotalRow()
 						current_key = getCurrentRowKey( vt[r_count] )
+						keysCounter = keysCounter + 1
 					end	
 					
 				end 
 			
+				if keysCounter > 1 then
+					--message ('grand')
+					addGrandTotalRow()
+				end
+
 				--empty row as delimiter
 				newRow = maintable.t:AddLine()
 

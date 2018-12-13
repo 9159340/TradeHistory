@@ -241,7 +241,9 @@ function MainTable:recalc_table( par_table, totals_t )
         local classCode = par_table:GetValue(row-1,'classCode').image
         local clientCode = par_table:GetValue(row-1,'account').image
 
-        totalsArray = maintable:findTotalsByClass(totals_t, clientCode, classCode)
+        --message('c'..classCode)
+
+        totalsArray = maintable:findTotalsByClientAndClass(totals_t, clientCode, classCode)
 
         par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
         par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
@@ -249,7 +251,21 @@ function MainTable:recalc_table( par_table, totals_t )
       end
     end
 
-		--show collateral for each position
+    -- update values in GRAND TOTAL rows (all clients within one class)
+    if par_table:GetValue(row,'secCode')~=nil then
+      if par_table:GetValue(row,'secCode').image == 'GRAND TOTAL' then
+
+        local classCode = par_table:GetValue(row-2,'classCode').image
+
+        grandTotalsArray = maintable:findGrandTotalsByClass(totals_t, classCode)
+
+        par_table:SetValue(row, 'profit', tostring( grandTotalsArray['profit'] )) 
+        par_table:SetValue(row, 'buyDepo', tostring( grandTotalsArray['buyDepo'] )) 
+        par_table:SetValue(row, 'accrual', tostring( grandTotalsArray['accrual'] )) 
+      end
+    end
+
+    --show collateral for each position
 		self:show_collateral(par_table, row)
 		
     row=row+1
@@ -310,7 +326,7 @@ function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, coll
 
 end
 
-
+-- zeros totals table before new iteration
 function MainTable:zeroTotalsTable( totals_t )
   
   for clientCode , classes in pairs(totals_t) do
@@ -323,46 +339,88 @@ function MainTable:zeroTotalsTable( totals_t )
 
 end
 
-
-
--- searches row in totals table
--- return: table with 2 field: collateral and PnL 
-function MainTable:findTotalsByClass( totals_t, clientCode, classCode )
+-- searches one row in totals table. filter criteria: both clientCode and classCode
+-- returns: table with fields:
+--  * buyDepo
+--  * profit 
+--  * accrual 
+function MainTable:findTotalsByClientAndClass( totals_t, clientCode, classCode )
 	
-    local retArray = {}
+    local retArray
     
-		for key, array_level_2 in pairs( totals_t ) do
-			--message ( tostring(key) ) 			-- account. example '714547'
-			--message ( tostring(array_level_2) )	-- table
+		for keyClientCode, classesTable in pairs( totals_t ) do
 
-			if key == clientCode then
+			if keyClientCode == clientCode then
 				
-				for key2, array_level_3 in pairs( array_level_2 ) do
-					--message ( tostring(key2) )			-- class code. example 'SPBOPT'
-					--message ( tostring(array_level_3) )	-- table
-
-					if key2 == classCode then
-
-		
-						for key3, value4 in pairs( array_level_3 ) do
-							--message ( tostring(key3) )		-- parameter name. example 'collateral', 'PnL'
-							--message ( tostring(value4) )		-- parameter value, amount. example 5432.97
-			
-							if key3 == 'collateral' then
-								retArray['buyDepo']=value4
-							
-							elseif key3 == 'PnL' then
-								retArray['profit']=value4
-
-							elseif key3 == 'accrual' then
-								retArray['accrual']=value4
-
-              end
-							
-						end
-					end
-				end
+				retArray = MainTable:findTotalsByClass( classesTable, classCode )
+				
 			end
 		end
 	return retArray	
+end
+
+-- searches rows in totals table and evaluates total by class code. filter criteria: only classCode
+-- returns: table with fields:
+--  * buyDepo
+--  * profit 
+--  * accrual 
+function MainTable:findGrandTotalsByClass( totals_t, classCode )
+	
+  local retArray = {}
+  retArray['buyDepo']=0
+  retArray['profit']=0
+  retArray['accrual']=0
+  
+  for keyClientCode, classesTable in pairs( totals_t ) do
+    
+    local ArrayOneClient = MainTable:findTotalsByClass( classesTable, classCode )
+
+    --message('class '..classCode..' client '.. keyClientCode .. ' profit ' .. tostring(ArrayOneClient['profit']))
+
+    if ArrayOneClient['buyDepo'] ~= nil then
+      retArray['buyDepo']=retArray['buyDepo'] + tonumber(ArrayOneClient['buyDepo'])
+    end
+    if ArrayOneClient['profit'] ~= nil then
+      retArray['profit']=retArray['profit']   + tonumber(ArrayOneClient['profit'])
+    end
+    if ArrayOneClient['accrual'] ~= nil then
+      retArray['accrual']=retArray['accrual'] + tonumber(ArrayOneClient['accrual'])
+    end
+ 
+  end
+  
+  return retArray	
+end
+
+-- searches rows in 'classesTable' table, which is derivative from totals_t.
+-- this table contains all classes within one client.
+-- returns: table with fields:
+--  * buyDepo
+--  * profit 
+--  * accrual
+function MainTable:findTotalsByClass( classesTable, classCode )
+	
+  local retArray = {}
+  
+    for keyClassCode, parametersTable in pairs( classesTable ) do
+
+      if keyClassCode == classCode then
+
+        for keyParameter, valueParameter in pairs( parametersTable ) do
+  
+          if keyParameter == 'collateral' then
+            retArray['buyDepo']=valueParameter
+          
+          elseif keyParameter == 'PnL' then
+            retArray['profit']=valueParameter
+
+          elseif keyParameter == 'accrual' then
+            retArray['accrual']=valueParameter
+
+          end
+        end  
+      end
+    end
+
+  return retArray	
 end

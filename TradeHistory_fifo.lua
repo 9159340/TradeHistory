@@ -568,16 +568,7 @@ function FIFO:readOpenFifoPositions_ver2(sec_code, class_code, account, isDetail
 
 	--helper:save_sql_to_file(sql, 'open_pos.sql')
 
-
-
-
-  
-  
-  
-
-
-	
-	--this function returns simple lua table
+  --this function returns simple lua table
 	local vt = {}
 
     local collateral = 0
@@ -746,7 +737,7 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
 																	
                     GROUP BY
                               dim_client_code
-							, dim_depo_code
+							              , dim_depo_code
                             , dim_sec_code
                             , dim_class_code
                             , dim_brokerref ]]

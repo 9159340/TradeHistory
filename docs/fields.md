@@ -1,8 +1,6 @@
 # Подробное описание полей таблицы скрипта
 
   Актуальный список колонок всегда можно посмотреть в методе createTable() файла TradeHistory_table.lua  
-  
-  
 
 * account		- строка, 	код счета клиента  
 * depo			- строка, 	код счета депо (актуально для спот-секции)  
@@ -22,38 +20,23 @@
 * dateClose		- строка, 	дата закрытия партии. Заполняется только в закрытых позициях  
 * timeClose		- строка, 	время закрытия партии. Заполняется только в закрытых позициях  
 * priceClose	- число,	цена закрытия позиции. В открытых показывается текущая цена bid/ask, в закрытых - цена сделки закрытия  
-* qtyClose		- число, 	количество, на которое закрылась партия
-  t:AddColumn("profitpt",   QTABLE_DOUBLE_TYPE, self:col_vis("profitpt"))      --in points(Ri) or currency(BR) or rubles (Si)
-  t:AddColumn("profit %",   QTABLE_DOUBLE_TYPE, self:col_vis("profit %"))  
-  t:AddColumn("priceOfStep",QTABLE_DOUBLE_TYPE, self:col_vis("priceOfStep"))     --price of "price's step"
-  t:AddColumn("profit",     QTABLE_DOUBLE_TYPE, self:col_vis("profit"))      --rubles
-  
-  t:AddColumn("commission", QTABLE_DOUBLE_TYPE, self:col_vis("commission"))
-  t:AddColumn("accrual",    QTABLE_DOUBLE_TYPE, self:col_vis("accrual"))
-  
-  
-  t:AddColumn("days",       QTABLE_INT_TYPE, self:col_vis("days"))  --days in position
-  
-    --service fields (not shown)
-  t:AddColumn("close_price_step",    QTABLE_DOUBLE_TYPE, self:col_vis("close_price_step"))   
-  t:AddColumn("close_price_step_price",    QTABLE_DOUBLE_TYPE, self:col_vis("close_price_step_price"))   
+* qtyClose		- число, 	количество, на которое закрылась партия  
+* profitpt		- число, 	фин. рез. в пунктах  
+* profit %		- число, 	фин. рез. в процентах изменения цены  
+* priceOfStep 	- число, 	стоимость шага цены для деривативов, в рублях  
+* profit		- число, 	фин. рез. в рублях  
+* commission	- число, 	комиссия брокера и биржи за сделку (не реализовано)  
+* accrual		- число, 	НКД. Актуально только для облигаций  
+* days			- число, 	количество дней в позиции (партии)  
+* close_price_step - число,	шаг цены при закрытии партии  
+* close_price_step_price - число, стоимость шага цены при закрытии партии  
+* buyDepo		- число, 	ГО для продавца   (неправильно транслируется из терминала)  
+* sellDepo		- число, 	ГО для покупателя (неправильно транслируется из терминала)  
+* timeUpdate	- строка,	время последнего пересчета строки с позицией (требуется для отладки)  
 
-  --collateral
-  t:AddColumn("buyDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("buyDepo"))	--for seller (amount)
-  t:AddColumn("sellDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("sellDepo"))	--for buyer (amount)
-  
-  --fur debug - shows time of last update the row
-  t:AddColumn("timeUpdate",  QTABLE_STRING_TYPE, self:col_vis("timeUpdate"))     
-  
-  --profit by theor price for options
-  t:AddColumn("theorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("theorPrice"))
-  t:AddColumn("profitByTheorPricePt",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPricePt"))--point
-  t:AddColumn("profitByTheorPrice %",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice %"))    --%
-  t:AddColumn("profitByTheorPrice",    QTABLE_DOUBLE_TYPE, self:col_vis("profitByTheorPrice"))    --RUB
+### Следующий блок колонок предназначен для расчета PnL опционов по теоретической цене  
 
-  
-
-
-
-
-
+* theorPrice	число,		теор. цена опциона  
+* profitByTheorPricePt	-	число, PnL относительно теор. цены  
+* profitByTheorPrice %	-	число, PnL относительно теор. цены  
+* profitByTheorPrice	-	число, PnL относительно теор. цены (руб.)  

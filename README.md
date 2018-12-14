@@ -11,3 +11,14 @@
 
 ## Описание настроек.
 
+Настройки хранятся в файле TradeHistory_settings.lua  
+
+  * self.groupByClass = true/false - включает группировку инструментов по классам  
+  * self.filter_by_class = {}  
+	self.filter_by_class['SPBFUT']=true - разворачивает содержимое класса при запуске скрипта (если есть позиции по бумагам этого класса).  
+  * self.db_path = getScriptPath() .. "\\positions2.db" - путь к базе данных.  
+  * self.dark_theme = true/false - переключает темы оформления (светлая/темная).  
+  * self.show_total_collateral_on_forts = true/false - показывать общую сумму ГО на ФОРТС.  
+  * self.show_totals = true/false - показывать итоги для каждого класса (если есть группировка по классам).  
+  * self.columns_visibility = {}  
+    self.columns_visibility["account"]=true/false - выбор колонок для отображения. Если сделать колонку невидимой, то она все равно будет отображаться в таблице, но с нулевой шириной (можно раздвинуть мышкой).  

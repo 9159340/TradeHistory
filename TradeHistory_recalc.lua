@@ -58,8 +58,8 @@ function Recalc:recalcPosition(t, row, isClosed)
 
 	local Total_PnL = PnL * qtyClose
 
-	--round to 4 digits after comma
-	Total_PnL = math.ceil(Total_PnL * 10000)/10000 --in points
+	--round to 2 digits after dot
+	Total_PnL = math.ceil(Total_PnL * 100)/100 --in points
 	
 	local mult = fifo:get_mult(sec_code, class_code)
 
@@ -91,7 +91,9 @@ function Recalc:recalcPosition(t, row, isClosed)
 			PnLtheor = priceOpen - theorPrice
 		end		
 		local Total_PnL_theor = PnLtheor * qtyClose
-		Total_PnL_theor = math.ceil(Total_PnL_theor * 10000)/10000 --in points
+
+		--round to 2 digits after dot
+		Total_PnL_theor = math.ceil(Total_PnL_theor * 100)/100 --in points
 		Total_PnL_theor = Total_PnL_theor * mult
 		t:SetValue(row, 'profitByTheorPricePt', tostring(Total_PnL_theor))
 

@@ -209,11 +209,18 @@ function load_OPEN_Positions()
 	if settings.groupByClass  == true then
 	
 		--read class visibility settings from table and show positions according to visibility
-		for class_code_to_show,allow_show_class in pairs(settings.filter_by_class) do
+		local class_count = 1
+		while class_count <= table.maxn(settings.filter_by_class) do
+		
+			local class_code_to_show = settings.filter_by_class[class_count]['class']
+			
+			local allow_show_class = settings.filter_by_class[class_count]['show']
+			
+			class_count = class_count + 1
 			
 			newRow = maintable.t:AddLine()
 			maintable.t:SetValue(newRow, 'secCode', class_code_to_show)--добавл€ем строку с именем класса (ключ таблицы)
-			colorizer:colorize_class(maintable.t, newRow)			
+			colorizer:colorize_class(maintable.t, newRow)
 			
 			if allow_show_class == true then
 			
@@ -222,7 +229,7 @@ function load_OPEN_Positions()
 				local r_count = 1
 				local vt, forts_totals = fifo:readOpenFifoPositions_ver2(nil, class_code_to_show, nil, false, maintable.totals_t)
 
-				--next 2 vars - to track if class has been changed
+				--next 2 vars are purposed to track if the class has been changed
 				local last_key = ''
 				local current_key = ''
 
@@ -394,23 +401,11 @@ function OnTrade(trade)
 	
 end
 
---details
+-- +----------------------------------------------------+
+--                  DETAILS
+-- +----------------------------------------------------+
 
---closes details windows on press ESC and standart closing button (X)
-=======
-function recalc_details()
-	-- recal details by portions
-    for key, details_table in pairs(details.t) do
-      if details_table~=nil then
-        maintable:recalc_table(details_table)
-      end    	
-    end
-end
-
-=======
->>>>>>> develop
 --closes details table window. press red cross or ESC
->>>>>>> develop
 local f_cb_details = function( t_id,  msg,  par1, par2)
   
   if (msg==QTABLE_CLOSE)  then
@@ -426,11 +421,12 @@ local f_cb_details = function( t_id,  msg,  par1, par2)
 	end  
 end 
 
---closed
+-- +----------------------------------------------------+
+--                  CLOSED POSITIONS
+-- +----------------------------------------------------+
 
 --функци€ закрывает окно таблицы закрытых сделок. по нажатию креста и кнопки ESC
 local f_cb_closed = function( t_id,  msg,  par1, par2)
-
 	--closes closed trades table window. press red cross or ESC
 	if msg==QTABLE_CLOSE  then
 		DestroyTable(closedpos.t.t_id)
@@ -443,9 +439,14 @@ local f_cb_closed = function( t_id,  msg,  par1, par2)
 	end  
 end 
 
---функци€ обрабатывает событи€ окна таблицы контекстного меню
+
+-- +----------------------------------------------------+
+--                  ACTIONS
+-- +----------------------------------------------------+
+
 local f_cb_cntx = function( t_id,  msg,  par1, par2)
-  
+	--*функци€ обрабатывает событи€ окна таблицы контекстного меню
+
 	if (msg==QTABLE_CLOSE)  then
 		--DestroyTable(t_id)
 		actions:kill()
@@ -491,15 +492,6 @@ local f_cb_cntx = function( t_id,  msg,  par1, par2)
 end 
 
 
-function recalc_details()
-	--message('recalc details')
-    for key, details_table in pairs(details.t) do
-      if details_table~=nil then
-        maintable:recalc_table(details_table)
-      end    	
-    end
-end
-
 -- +----------------------------------------------------+
 --                  MAIN
 -- +----------------------------------------------------+
@@ -513,7 +505,7 @@ end
 --
 --функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна
 local f_cb = function( t_id,  msg,  par1, par2)
-  
+  --*функци€ должна располагатьс€ перед main(), иначе - скрипт не останавливаетс€ при закрытии окна (проверить)
   if (msg==QTABLE_CLOSE)  then
     is_run = false
     DestroyTables()
@@ -544,10 +536,9 @@ local f_cb = function( t_id,  msg,  par1, par2)
 			return
 		end
 
-		--если щелкнули на строку OPEN POSITIONS - нужно показать закрытые позиции
-		if 
-			maintable.t:GetValue(par1,'profitpt').image == 'CLOSED'
-			and maintable.t:GetValue(par1,'profit %').image == 'POSITIONS' then
+		--если щелкнули на строку CLOSED POSITIONS - нужно показать закрытые позиции
+		if maintable.t:GetValue(par1,'profitpt').image == 'CLOSED'
+			 and maintable.t:GetValue(par1,'profit %').image == 'POSITIONS' then
 			
 			closedpos:load()
 			
@@ -573,8 +564,11 @@ local f_cb = function( t_id,  msg,  par1, par2)
 	elseif msg==QTABLE_LBUTTONUP then
 		
 		--при отжатии левой кнопки мыши в строке с именем класса будет происходить скрытие/отображение позиций этого класса
-		
-		local class_code = maintable.t:GetValue(par1,'secCode').image
+		local cell = maintable.t:GetValue(par1,'secCode')
+		if cell == nil then
+			message('nil')
+		end
+		local class_code = cell.image
 		if class_code == 'TQBR' 
 		or class_code == 'CETS'
 		or class_code == 'SPBFUT'
@@ -584,19 +578,18 @@ local f_cb = function( t_id,  msg,  par1, par2)
 		or class_code == 'TQDE'
 		or class_code == 'TQTF'
 		then
-			--по щелчку на им€ класса будем сворачивать и разворачивать открытые позиции в этом классе
-			if settings.filter_by_class[class_code] == false then
-				settings.filter_by_class[class_code] = true
-				
-			elseif settings.filter_by_class[class_code] == true then
-				settings.filter_by_class[class_code] = false
-				
+			-- collapse/expand content of the class (positions) on the left mouse btn click
+			local class_row = settings:getRowFromFilterByClassByCode( class_code )
+			if class_row['show'] == false then
+				class_row['show'] = true
+			elseif class_row['show'] == true then
+				class_row['show'] = false
 			end
 			load_OPEN_Positions()
 		end
 		
 	elseif msg==QTABLE_VKEY then
-		--message(par2)
+
 		if par2 == 27 then-- esc
 			is_run=false
 			DestroyTables()

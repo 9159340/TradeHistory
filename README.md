@@ -24,8 +24,13 @@
 ### Основные настройки хранятся в файле TradeHistory_settings.lua  
 
   * self.groupByClass = true/false - включает группировку инструментов по классам  
-  * self.filter_by_class = {}  
-	self.filter_by_class['SPBFUT']=true - разворачивает содержимое класса при запуске скрипта (если есть позиции по бумагам этого класса).  
+  * Отображение классов инструментов.
+    Теперь можно задать порядок следования классов в главной таблице - они выводятся согласно порядку добавления в таблицу filter_by_class.
+    self.filter_by_class = {}  
+	self.filter_by_class[1] = {}  
+	self.filter_by_class[1]['class']='SPBFUT'  
+	self.filter_by_class[1]['show']=true   - разворачивает содержимое класса при запуске скрипта (если есть позиции по бумагам этого класса).  
+	
   * self.db_path = getScriptPath() .. "\\positions2.db" - путь к базе данных.  
   * self.dark_theme = true/false - переключает темы оформления (светлая/темная).  
   * self.show_total_collateral_on_forts = true/false - показывать общую сумму ГО на ФОРТС.  

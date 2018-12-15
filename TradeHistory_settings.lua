@@ -1,5 +1,6 @@
 Settings = class(function(acc)
 end)
+
 function Settings:Init()
 
 	--group positions by instrument classes
@@ -9,16 +10,41 @@ function Settings:Init()
 	--фильтр по классам бумаг. например, акции на споте не интересно выводить в спекулятивную таблицу
 	--фильтр пока будет работать только вместе с группировкой по классам
 	--значение элемента - бул - определяет видимость позиций
-	self.filter_by_class = {}
-	self.filter_by_class['SPBFUT']=false
-	self.filter_by_class['SPBOPT']=false
-	self.filter_by_class['TQBR']=false --акции
+	self.filter_by_class = {}	
+	self.filter_by_class[1] = {}
+	self.filter_by_class[1]['class']='SPBFUT'
+	self.filter_by_class[1]['show']=true
+	self.filter_by_class[2] = {}
+	self.filter_by_class[2]['class']='SPBOPT'
+	self.filter_by_class[2]['show']=true
+	self.filter_by_class[3] = {}
+	self.filter_by_class[3]['class']='TQBR'
+	self.filter_by_class[3]['show']=false
+	self.filter_by_class[4] = {}
+	self.filter_by_class[4]['class']='EQOB'
+	self.filter_by_class[4]['show']=false
+	self.filter_by_class[5] = {}
+	self.filter_by_class[5]['class']='TQOB'
+	self.filter_by_class[5]['show']=false
+	self.filter_by_class[6] = {}
+	self.filter_by_class[6]['class']='TQDE'
+	self.filter_by_class[6]['show']=false
+	self.filter_by_class[7] = {}
+	self.filter_by_class[7]['class']='CETS'
+	self.filter_by_class[7]['show']=false
+	self.filter_by_class[8] = {}
+	self.filter_by_class[8]['class']='TQTF'
+	self.filter_by_class[8]['show']=false
+	--[[
+	self.filter_by_class['SPBFUT']=true
+	self.filter_by_class['SPBOPT']=true
+	self.filter_by_class['TQBR']=true --акции
 	self.filter_by_class['EQOB']=false --корп облигации
 	self.filter_by_class['TQOB']=false --ОФЗ
 	self.filter_by_class['TQDE']=false --дефолтные акции (трансаэро)
-	self.filter_by_class['CETS']=true
+	self.filter_by_class['CETS']=false
 	self.filter_by_class['TQTF']=false --ETF
-	
+	--]]
 	self.db_path = getScriptPath() .. "\\positions2.db"
 	
 	self.dark_theme = false
@@ -30,22 +56,10 @@ function Settings:Init()
 	
 	self.columns_visibility = {}
 	
-<<<<<<< HEAD
-<<<<<<< HEAD
---настройка видимости колонок
-  self.columns_visibility["account"]=true
-=======
---column visibility settings
-
-  self.columns_visibility["account"]=false
->>>>>>> develop
-  self.columns_visibility["depo"]=false --счет Депо для ММВБ
-=======
   --column visibility settings
 
   self.columns_visibility["account"]=true
   self.columns_visibility["depo"]=false --depo account for MICEX
->>>>>>> develop
   self.columns_visibility["comment"]=false
   self.columns_visibility["secCode"]=true
   self.columns_visibility["classCode"]=true
@@ -121,4 +135,17 @@ function Settings:Init()
 	self.columns_width['profitByTheorPrice %'] = 9
 	self.columns_width['profitByTheorPrice'] = 10
 
+end
+
+function Settings:getRowFromFilterByClassByCode( class_code )
+	--message( tostring( filter_by_class ) )
+		local class_count = 1
+		while class_count <= table.maxn( self.filter_by_class ) do
+		
+			if self.filter_by_class[class_count]['class'] == class_code then
+				return self.filter_by_class[class_count]
+			end
+			class_count=class_count+1
+		end
+		return nil
 end

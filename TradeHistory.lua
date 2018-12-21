@@ -198,7 +198,6 @@ function load_OPEN_Positions()
   maintable.t:SetValue(r, 'qtyClose', "show")
   maintable.t:SetValue(r, 'profitpt', "CLOSED")
   maintable.t:SetValue(r, 'profit %', "POSITIONS")
-  colorizer:colorize_class(maintable.t, r)
   
   --get the table with positions from fifo
   
@@ -563,29 +562,18 @@ local f_cb = function( t_id,  msg,  par1, par2)
 	
 	elseif msg==QTABLE_LBUTTONUP then
 		
-		--при отжатии левой кнопки мыши в строке с именем класса будет происходить скрытие/отображение позиций этого класса
+		-- collapse/expand content of the class (positions) on the left mouse btn click
 		local cell = maintable.t:GetValue(par1,'secCode')
-		if cell == nil then
-			message('nil')
-		end
-		local class_code = cell.image
-		if class_code == 'TQBR' 
-		or class_code == 'CETS'
-		or class_code == 'SPBFUT'
-		or class_code == 'SPBOPT'
-		or class_code == 'EQOB'
-		or class_code == 'TQOB'
-		or class_code == 'TQDE'
-		or class_code == 'TQTF'
-		then
-			-- collapse/expand content of the class (positions) on the left mouse btn click
-			local class_row = settings:getRowFromFilterByClassByCode( class_code )
-			if class_row['show'] == false then
-				class_row['show'] = true
-			elseif class_row['show'] == true then
-				class_row['show'] = false
+		if cell ~= nil then
+			local class_row = settings:getRowFromFilterByClassByCode( cell.image )
+			if class_row ~= nil then
+				if class_row['show'] == false then
+					class_row['show'] = true
+				elseif class_row['show'] == true then
+					class_row['show'] = false
+				end
+				load_OPEN_Positions()
 			end
-			load_OPEN_Positions()
 		end
 		
 	elseif msg==QTABLE_VKEY then

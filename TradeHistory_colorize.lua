@@ -77,7 +77,14 @@ function Colorizer:colorize_class(t, row)
 		SetColor(t.t_id, row, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)		
 		
 	else
-		--self:colorize_row_light_theme(t, row, PnL)
+	
+		local b_color = RGB(175, 218, 252)         --background color
+		local sel_b_color = b_color     --background color in selected row
+		  
+		local f_color     = RGB(0, 0, 0)      	--font color in unselected row
+		local sel_f_color = f_color
+		
+		SetColor(t.t_id, row, QTABLE_NO_INDEX, b_color, f_color, sel_b_color, sel_f_color)		
 	end
 	
 end

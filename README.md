@@ -25,11 +25,14 @@
 
   * self.groupByClass = true/false - включает группировку инструментов по классам  
   * Отображение классов инструментов.
-    Теперь можно задать порядок следования классов в главной таблице - они выводятся согласно порядку добавления в таблицу filter_by_class.
-    self.filter_by_class = {}  
-	self.filter_by_class[1] = {}  
-	self.filter_by_class[1]['class']='SPBFUT'  
-	self.filter_by_class[1]['show']=true   - разворачивает содержимое класса при запуске скрипта (если есть позиции по бумагам этого класса).  
+  	Полный список классов инструментов можно найти в файле по ссылке (копия есть в репозитории)
+	
+	[ASTS_Markets_and_Boards.pdf](http://ftp.micex.com/pub/ClientsAPI/ASTS/docs/ASTS_Markets_and_Boards.pdf "ASTS_Markets_and_Boards")
+    
+	Можно задать порядок следования классов в главной таблице - они выводятся согласно порядку добавления в таблицу filter_by_class.
+	
+	self:addClassToFilter( 'SPBFUT', true )
+	self:addClassToFilter( 'SPBOPT', true )- разворачивает содержимое класса при запуске скрипта (если есть позиции по бумагам этого класса).  
 	
   * self.db_path = getScriptPath() .. "\\positions2.db" - путь к базе данных.  
   * self.dark_theme = true/false - переключает темы оформления (светлая/темная).  

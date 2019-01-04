@@ -148,7 +148,7 @@ function Actions:executeAction(action)
 		
 		details:load()
 		
-		recalc_details()
+		details:recalc_details()
 		
 		--на этот t_id снаружи повесим колбэк, чтобы по ESC можно было закрыть
 		self.resultTable['details_t_id'] = details.t[details.key].t_id

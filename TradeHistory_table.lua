@@ -225,10 +225,11 @@ function MainTable:recalc_table( par_table, totals_t )
         local classCode = par_table:GetValue(row,'classCode').image
         local accrual = tonumber(par_table:GetValue(row,'accrual').image)
         local buyDepo = tonumber(par_table:GetValue(row,'buyDepo').image)
+		local amount = tonumber(par_table:GetValue(row,'amount').image)
         
         local PnLrub = helper:getProfit(par_table,row)
 
-        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual )
+        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount )
       end	
     
     end
@@ -248,6 +249,7 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
         par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
+		par_table:SetValue(row, 'amount', tostring( totalsArray['amount'] )) 
       end
     end
 
@@ -262,6 +264,7 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'profit', tostring( grandTotalsArray['profit'] )) 
         par_table:SetValue(row, 'buyDepo', tostring( grandTotalsArray['buyDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( grandTotalsArray['accrual'] )) 
+		par_table:SetValue(row, 'amount', tostring( grandTotalsArray['amount'] )) 
       end
     end
 
@@ -282,6 +285,7 @@ end
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['collateral'] = 0
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['PnL'] = 0
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['accrual'] = 0
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['amount'] = 0
 function MainTable:createTotalsTable()
 	
   self.totals_t = {}
@@ -304,12 +308,13 @@ function MainTable:addClassToTotalsTable( totals_t, clientCode, classCode )
     totals_t[ clientCode ] [ classCode ] [ 'collateral' ] = 0
     totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
     totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
+	totals_t[ clientCode ] [ classCode ] [ 'amount' ] = 0
 
   end
 
 end
 
-function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual )
+function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual, amount )
   
   self:addClientToTotalsTable( totals_t, clientCode )
   self:addClassToTotalsTable( totals_t, clientCode, classCode )
@@ -323,6 +328,9 @@ function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, coll
   if accrual ~= nil then
     totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = totals_t[ clientCode ] [ classCode ] [ 'accrual' ] + accrual
   end
+  if amount ~= nil then
+    totals_t[ clientCode ] [ classCode ] [ 'amount' ] = totals_t[ clientCode ] [ classCode ] [ 'amount' ] + amount
+  end
 
 end
 
@@ -334,6 +342,7 @@ function MainTable:zeroTotalsTable( totals_t )
       values [ 'collateral' ] = 0
       values [ 'PnL' ] = 0
       values [ 'accrual' ] = 0
+	  values [ 'amount' ] = 0
     end
   end
 
@@ -344,6 +353,7 @@ end
 --  * buyDepo
 --  * profit 
 --  * accrual 
+--  * amount 
 function MainTable:findTotalsByClientAndClass( totals_t, clientCode, classCode )
 	
     local retArray
@@ -364,12 +374,14 @@ end
 --  * buyDepo
 --  * profit 
 --  * accrual 
+--  * amount
 function MainTable:findGrandTotalsByClass( totals_t, classCode )
 	
   local retArray = {}
   retArray['buyDepo']=0
   retArray['profit']=0
   retArray['accrual']=0
+  retArray['amount']=0
   
   for keyClientCode, classesTable in pairs( totals_t ) do
     
@@ -385,6 +397,9 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
     end
     if ArrayOneClient['accrual'] ~= nil then
       retArray['accrual']=retArray['accrual'] + tonumber(ArrayOneClient['accrual'])
+    end
+    if ArrayOneClient['amount'] ~= nil then
+      retArray['amount']=retArray['amount'] + tonumber(ArrayOneClient['amount'])
     end
  
   end
@@ -417,7 +432,10 @@ function MainTable:findTotalsByClass( classesTable, classCode )
           elseif keyParameter == 'accrual' then
             retArray['accrual']=valueParameter
 
-          end
+          elseif keyParameter == 'amount' then
+            retArray['amount']=valueParameter
+
+		  end
         end  
       end
     end

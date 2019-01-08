@@ -112,7 +112,22 @@ function addRowFromFIFO(sqliteRow)
 	end
 	maintable.t:SetValue(row, 'quantity', tostring(sqliteRow.qty)) --для spot это будут штуки, для фортс - по-разному, 
 	maintable.t:SetValue(row, 'amount', tostring(sqliteRow.value))
-	maintable.t:SetValue(row, 'priceOpen', tostring(sqliteRow.price))
+	local val = sqliteRow.price
+	if val == nil then
+		maintable.t:SetValue(row, 'priceOpen', '')
+	else
+		local precision = settings:get_precision(sqliteRow.dim_sec_code)
+		local priceOpen = 0
+		if precision~=nil then
+			priceOpen = helper:math_round(val/100000, precision)
+		else
+			priceOpen = helper:math_round(val/100000, 2)
+		end
+		maintable.t:SetValue(row, 'priceOpen', tostring(  priceOpen      ))
+		--message (val)
+	end
+  
+	
 	maintable.t:SetValue(row, 'dateClose', '')
 	maintable.t:SetValue(row, 'timeClose', '')
 	maintable.t:SetValue(row, 'priceClose', tostring(sqliteRow.price))
@@ -244,6 +259,15 @@ function load_OPEN_Positions()
 					--message(tostring(r_count) .. vt[r_count].dim_class_code .. ' current key ' ..current_key)
 
 					addRowFromFIFO(vt[r_count])
+					
+	local val = vt[r_count].price/100000
+	if val == nil then
+		--maintable.t:SetValue(row, 'priceOpen', '')
+	else
+		
+		
+		--message (val)
+	end				
 
 					last_key = current_key
 

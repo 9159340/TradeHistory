@@ -659,9 +659,10 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
            --ресурсы
         , q1.qty   AS qty
         , q1.value AS value
-		    , q1.commiss AS commiss
-        , coalesce(q1.price, 0) AS price
-         --average price of position
+		, q1.commiss AS commiss
+          --, coalesce(q1.price, 0) AS price
+		, CAST(coalesce(q1.price, 0) AS NUMERIC)*100000 AS price
+          --average price of position
           --other
         , securities.lotsize AS lot --info. has the meaning only for spot
         , securities.mat_date AS mat_date
@@ -677,7 +678,6 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
 		]]
 	if isDetails then							
 		sql = sql .. ', dim_trade_num'
-
 	end							
     sql = sql .. [[
                                --ресурсы
@@ -744,7 +744,6 @@ function FIFO:QueryTextOpenFifoPositions_ver3(sec_code, class_code, account, isD
 
   if isDetails then							
   	sql = sql .. ', dim_trade_num'
-
   end
 	  sql = sql .. [[ ) AS q1
           LEFT JOIN

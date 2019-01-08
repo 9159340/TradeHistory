@@ -56,10 +56,18 @@ function Recalc:recalcPosition(t, row, isClosed)
 		PnL = priceOpen - priceClose
 	end
 
-	local Total_PnL = PnL * qtyClose
+	local Total_PnL = 0
 
 	--round to 2 digits after dot
-	Total_PnL = math.ceil(Total_PnL * 100)/100 --in points
+	
+	local precision = settings:get_precision( sec_code )
+
+	--Total_PnL = math.ceil(Total_PnL * 100)/100 --in points
+	if precision~=nil then
+		Total_PnL = helper:math_round( PnL * qtyClose, precision)
+	else
+		Total_PnL = helper:math_round( PnL * qtyClose, 2)
+	end
 	
 	local mult = fifo:get_mult(sec_code, class_code)
 

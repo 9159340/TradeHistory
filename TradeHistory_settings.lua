@@ -66,7 +66,7 @@ function Settings:Init()
 	self.columns_visibility["tradeNum"]=false
 	self.columns_visibility["operation"]=true
 	self.columns_visibility["quantity"]=true
-	self.columns_visibility["amount"]=false
+	self.columns_visibility["amount"]=true
 	self.columns_visibility["priceOpen"]=true
 	self.columns_visibility["dateClose"]=true
 	self.columns_visibility["timeClose"]=false
@@ -109,8 +109,8 @@ function Settings:Init()
 	self.columns_width['quantity'] = 7
 	self.columns_width['amount'] = 7
 	self.columns_width['priceOpen'] = 10 
-	self.columns_width['dateClose'] = 10
-	self.columns_width['timeClose'] = 10
+	self.columns_width['dateClose'] = 4
+	self.columns_width['timeClose'] = 4
 	self.columns_width['priceClose'] = 10
 	self.columns_width['qtyClose'] = 7
 	self.columns_width['profitpt'] = 10
@@ -132,6 +132,7 @@ function Settings:Init()
 	self.columns_width['profitByTheorPrice %'] = 9
 	self.columns_width['profitByTheorPrice'] = 10
 
+	self.precision_table = Settings:precision_table()
 end
 
 -- returns row
@@ -148,3 +149,29 @@ function Settings:getRowFromFilterByClassByCode( class_code )
 	return nil
 end
 
+-- creates table with precisions for selected instruments
+-- it is being used for calculation open and close prices
+function Settings:precision_table()
+	local precision_table = {}
+	precision_table['ticker'] = 'dummy'
+	
+	-- MICEX
+	precision_table['VTBR'] = 5
+	precision_table['ENRU'] = 4
+	precision_table['HYDR'] = 4
+	precision_table['FEES'] = 5
+	
+	-- FORTS
+	precision_table['EDH9'] = 4
+	
+	-- CETS
+	precision_table['USD000UTSTOM'] = 4
+	precision_table['EUR_RUB__TOM'] = 4
+	
+	return precision_table
+end
+
+-- returns precision for defined instrument code
+function Settings:get_precision ( secCode )
+	return self.precision_table[ secCode ]
+end

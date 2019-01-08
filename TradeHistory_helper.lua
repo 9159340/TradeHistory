@@ -263,9 +263,14 @@ function Helper:get_priceClose(par_t, row)
   if priceClose == nil then
     priceClose = 0
   end
-  --округление
-  --priceClose = math.ceil(priceClose*10000)/10000
-  priceClose = self:math_round(priceClose, 4)
+  --rounding
+	local precision = settings:get_precision( sec_code )
+
+	if precision~=nil then
+		priceClose = self:math_round(priceClose, precision)
+	else
+		priceClose = self:math_round(priceClose, 2)
+	end
   
   return priceClose
 

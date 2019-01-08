@@ -226,10 +226,11 @@ function MainTable:recalc_table( par_table, totals_t )
         local accrual = tonumber(par_table:GetValue(row,'accrual').image)
         local buyDepo = tonumber(par_table:GetValue(row,'buyDepo').image)
 		local amount = tonumber(par_table:GetValue(row,'amount').image)
-        
+        local profitByTheorPrice = tonumber(par_table:GetValue(row,'profitByTheorPrice').image)
+		
         local PnLrub = helper:getProfit(par_table,row)
 
-        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount )
+        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount, profitByTheorPrice )
       end	
     
     end
@@ -249,7 +250,9 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
         par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
-		par_table:SetValue(row, 'amount', tostring( totalsArray['amount'] )) 
+		par_table:SetValue(row, 'amount', tostring( totalsArray['amount'] ))
+		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))
+		
       end
     end
 
@@ -264,7 +267,8 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'profit', tostring( grandTotalsArray['profit'] )) 
         par_table:SetValue(row, 'buyDepo', tostring( grandTotalsArray['buyDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( grandTotalsArray['accrual'] )) 
-		par_table:SetValue(row, 'amount', tostring( grandTotalsArray['amount'] )) 
+		par_table:SetValue(row, 'amount', tostring( grandTotalsArray['amount'] ))
+		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))		
       end
     end
 
@@ -309,12 +313,12 @@ function MainTable:addClassToTotalsTable( totals_t, clientCode, classCode )
     totals_t[ clientCode ] [ classCode ] [ 'PnL' ] = 0
     totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
 	totals_t[ clientCode ] [ classCode ] [ 'amount' ] = 0
-
+	totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] = 0
   end
 
 end
 
-function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual, amount )
+function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual, amount, profitByTheorPrice )
   
   self:addClientToTotalsTable( totals_t, clientCode )
   self:addClassToTotalsTable( totals_t, clientCode, classCode )
@@ -331,7 +335,9 @@ function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, coll
   if amount ~= nil then
     totals_t[ clientCode ] [ classCode ] [ 'amount' ] = totals_t[ clientCode ] [ classCode ] [ 'amount' ] + amount
   end
-
+  if profitByTheorPrice ~= nil then
+    totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] = totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] + profitByTheorPrice
+  end
 end
 
 -- zeros totals table before new iteration
@@ -343,6 +349,7 @@ function MainTable:zeroTotalsTable( totals_t )
       values [ 'PnL' ] = 0
       values [ 'accrual' ] = 0
 	  values [ 'amount' ] = 0
+	  values [ 'profitByTheorPrice' ] = 0
     end
   end
 
@@ -375,6 +382,8 @@ end
 --  * profit 
 --  * accrual 
 --  * amount
+--	* profitByTheorPrice
+--
 function MainTable:findGrandTotalsByClass( totals_t, classCode )
 	
   local retArray = {}
@@ -382,6 +391,8 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
   retArray['profit']=0
   retArray['accrual']=0
   retArray['amount']=0
+  retArray['profitByTheorPrice']=0
+  
   
   for keyClientCode, classesTable in pairs( totals_t ) do
     
@@ -401,7 +412,9 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
     if ArrayOneClient['amount'] ~= nil then
       retArray['amount']=retArray['amount'] + tonumber(ArrayOneClient['amount'])
     end
- 
+    if ArrayOneClient['profitByTheorPrice'] ~= nil then
+      retArray['profitByTheorPrice']=retArray['profitByTheorPrice'] + tonumber(ArrayOneClient['profitByTheorPrice'])
+    end
   end
   
   return retArray	
@@ -412,7 +425,10 @@ end
 -- returns: table with fields:
 --  * buyDepo
 --  * profit 
---  * accrual
+--  * accrual 
+--  * amount
+--	* profitByTheorPrice
+--
 function MainTable:findTotalsByClass( classesTable, classCode )
 	
   local retArray = {}
@@ -434,6 +450,9 @@ function MainTable:findTotalsByClass( classesTable, classCode )
 
           elseif keyParameter == 'amount' then
             retArray['amount']=valueParameter
+          
+		  elseif keyParameter == 'profitByTheorPrice' then
+            retArray['profitByTheorPrice']=valueParameter
 
 		  end
         end  

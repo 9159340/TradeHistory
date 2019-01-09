@@ -80,7 +80,23 @@ function Details:addRowFromFIFO(sqliteRow)
 	end
 	self.t[self.key]:SetValue(row, 'quantity', tostring(sqliteRow.qty)) --для spot это будут штуки, для фортс - по-разному, 
 	self.t[self.key]:SetValue(row, 'amount', tostring(sqliteRow.value))
-	self.t[self.key]:SetValue(row, 'priceOpen', tostring(sqliteRow.price))
+	--self.t[self.key]:SetValue(row, 'priceOpen', tostring(sqliteRow.price))
+
+	local val = sqliteRow.price
+	if val == nil then
+		maintable.t:SetValue(row, 'priceOpen', '')
+	else
+		local precision = settings:get_precision(sqliteRow.dim_sec_code)
+		local priceOpen = 0
+		if precision~=nil then
+			priceOpen = helper:math_round(val/100000, precision)
+		else
+			priceOpen = helper:math_round(val/100000, 2)
+		end
+		self.t[self.key]:SetValue(row, 'priceOpen', tostring( priceOpen ))
+		--message (val)
+	end
+
 	self.t[self.key]:SetValue(row, 'dateClose', '')
 	self.t[self.key]:SetValue(row, 'timeClose', '')
 	self.t[self.key]:SetValue(row, 'priceClose', tostring(sqliteRow.price))
@@ -96,14 +112,14 @@ function Details:addRowFromFIFO(sqliteRow)
     
 	--show days in position. 
 	self.t[self.key]:SetValue(row, 'days', helper:days_in_position(sqliteRow.dateOpen,  os.date('%Y-%m-%d')))
-		
+	
 	--show accrual
 	if sqliteRow.dim_class_code =='TQOB' or sqliteRow.dim_class_code=='EQOB' then
 		self.t[self.key]:SetValue(row, 'accrual', tonumber(getParamEx (sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'accruedint').param_value) * tonumber(sqliteRow.qty))
 		--show correct amount
 		local SEC_FACE_VALUE = tonumber(getParamEx (sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'sec_face_value').param_value)
 		self.t[self.key]:SetValue(row, 'amount', tostring(SEC_FACE_VALUE * sqliteRow.qty * sqliteRow.price / 100))
-	end      
+	end     
 	
 	--show option type
 	local optionType = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'optiontype')
@@ -113,7 +129,7 @@ function Details:addRowFromFIFO(sqliteRow)
 		optionType = ''
 	end
 	
-	self.t[self.key]:SetValue(row, 'optionType', optionType)	
+	self.t[self.key]:SetValue(row, 'optionType', optionType)
 	
 	--show option theor price
 	local theorprice = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'theorprice')

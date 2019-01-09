@@ -95,7 +95,7 @@ function addRowFromFIFO(sqliteRow)
 	if sqliteRow.dim_client_code == nil then
 		return
 	end
-  
+
 	local row = maintable.t:AddLine()
 	maintable.t:SetValue(row, 'account', sqliteRow.dim_client_code)
 	maintable.t:SetValue(row, 'depo', sqliteRow.dim_depo_code)
@@ -126,7 +126,6 @@ function addRowFromFIFO(sqliteRow)
 		maintable.t:SetValue(row, 'priceOpen', tostring(  priceOpen      ))
 		--message (val)
 	end
-  
 	
 	maintable.t:SetValue(row, 'dateClose', '')
 	maintable.t:SetValue(row, 'timeClose', '')
@@ -147,7 +146,7 @@ function addRowFromFIFO(sqliteRow)
 		maintable.t:SetValue(row, 'amount', tostring(SEC_FACE_VALUE * sqliteRow.qty * sqliteRow.price / 100))
 	end     
 	
-	--покажем тип опциона
+	--show option type
 	local optionType = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'optiontype')
 	if optionType ~= nil then
 		optionType = optionType.param_image
@@ -157,7 +156,7 @@ function addRowFromFIFO(sqliteRow)
 	
 	maintable.t:SetValue(row, 'optionType', optionType)
 	
-	--покажем теор цену опциона
+	--show option theor price
 	local theorprice = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'theorprice')
 	if theorprice ~= nil then
 		theorprice = theorprice.param_image
@@ -165,9 +164,9 @@ function addRowFromFIFO(sqliteRow)
 		theorprice = ''
 	end
 	
-	maintable.t:SetValue(row, 'theorPrice', theorprice)	
+	maintable.t:SetValue(row, 'theorPrice', theorprice)
 	
-	--show date of expiration
+	--show expiration date
 	local expiration = getParamEx(sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'expdate')
 	if expiration ~= nil then
 		expiration = expiration.param_image
@@ -258,16 +257,7 @@ function load_OPEN_Positions()
 
 					--message(tostring(r_count) .. vt[r_count].dim_class_code .. ' current key ' ..current_key)
 
-					addRowFromFIFO(vt[r_count])
-					
-	local val = vt[r_count].price/100000
-	if val == nil then
-		--maintable.t:SetValue(row, 'priceOpen', '')
-	else
-		
-		
-		--message (val)
-	end				
+					addRowFromFIFO(vt[r_count])		
 
 					last_key = current_key
 

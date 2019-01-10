@@ -118,7 +118,8 @@ function Details:addRowFromFIFO(sqliteRow)
 		self.t[self.key]:SetValue(row, 'accrual', tonumber(getParamEx (sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'accruedint').param_value) * tonumber(sqliteRow.qty))
 		--show correct amount
 		local SEC_FACE_VALUE = tonumber(getParamEx (sqliteRow.dim_class_code, sqliteRow.dim_sec_code, 'sec_face_value').param_value)
-		self.t[self.key]:SetValue(row, 'amount', tostring(SEC_FACE_VALUE * sqliteRow.qty * sqliteRow.price / 100))
+		local bond_amount = SEC_FACE_VALUE * sqliteRow.qty * (sqliteRow.price/100000) / 100
+		self.t[self.key]:SetValue(row, 'amount', tostring(helper:math_round(bond_amount,0)))
 	end     
 	
 	--show option type

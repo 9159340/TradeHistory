@@ -227,10 +227,10 @@ function MainTable:recalc_table( par_table, totals_t )
         local buyDepo = tonumber(par_table:GetValue(row,'buyDepo').image)
 		local amount = tonumber(par_table:GetValue(row,'amount').image)
         local profitByTheorPrice = tonumber(par_table:GetValue(row,'profitByTheorPrice').image)
-		
+		local PnL = helper:getProfitpt(par_table,row)
         local PnLrub = helper:getProfit(par_table,row)
 
-        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount, profitByTheorPrice )
+        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount, profitByTheorPrice, PnL )
       end	
     
     end
@@ -252,7 +252,8 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
 		par_table:SetValue(row, 'amount', tostring( totalsArray['amount'] ))
 		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))
-		
+		par_table:SetValue(row, 'profitpt', tostring( totalsArray['profitpt'] )) 
+
       end
     end
 
@@ -269,6 +270,8 @@ function MainTable:recalc_table( par_table, totals_t )
         par_table:SetValue(row, 'accrual', tostring( grandTotalsArray['accrual'] )) 
 		par_table:SetValue(row, 'amount', tostring( grandTotalsArray['amount'] ))
 		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))		
+		par_table:SetValue(row, 'profitpt', tostring( grandTotalsArray['profitpt'] ))
+
       end
     end
 
@@ -290,6 +293,8 @@ end
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['PnL'] = 0
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['accrual'] = 0
 --forts_totals_2[row.dim_client_code][row.dim_class_code]['amount'] = 0
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['profitByTheorPrice'] = 0
+--forts_totals_2[row.dim_client_code][row.dim_class_code]['PnLpt'] = 0
 function MainTable:createTotalsTable()
 	
   self.totals_t = {}
@@ -314,11 +319,15 @@ function MainTable:addClassToTotalsTable( totals_t, clientCode, classCode )
     totals_t[ clientCode ] [ classCode ] [ 'accrual' ] = 0
 	totals_t[ clientCode ] [ classCode ] [ 'amount' ] = 0
 	totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] = 0
+	totals_t[ clientCode ] [ classCode ] [ 'PnLpt' ] = 0
+
   end
 
 end
 
-function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual, amount, profitByTheorPrice )
+--parameters
+--	PnLpt - profit in points
+function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, collateral, PnL, accrual, amount, profitByTheorPrice, PnLpt )
   
   self:addClientToTotalsTable( totals_t, clientCode )
   self:addClassToTotalsTable( totals_t, clientCode, classCode )
@@ -338,6 +347,10 @@ function MainTable:addValuesToTotalsTable( totals_t, clientCode, classCode, coll
   if profitByTheorPrice ~= nil then
     totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] = totals_t[ clientCode ] [ classCode ] [ 'profitByTheorPrice' ] + profitByTheorPrice
   end
+  if PnLpt ~= nil then
+    totals_t[ clientCode ] [ classCode ] [ 'PnLpt' ] = totals_t[ clientCode ] [ classCode ] [ 'PnLpt' ] + PnLpt
+  end
+
 end
 
 -- zeros totals table before new iteration
@@ -350,6 +363,7 @@ function MainTable:zeroTotalsTable( totals_t )
       values [ 'accrual' ] = 0
 	  values [ 'amount' ] = 0
 	  values [ 'profitByTheorPrice' ] = 0
+	  values [ 'PnLpt' ] = 0
     end
   end
 
@@ -383,7 +397,7 @@ end
 --  * accrual 
 --  * amount
 --	* profitByTheorPrice
---
+--	* profitpt - profit in points
 function MainTable:findGrandTotalsByClass( totals_t, classCode )
 	
   local retArray = {}
@@ -392,7 +406,7 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
   retArray['accrual']=0
   retArray['amount']=0
   retArray['profitByTheorPrice']=0
-  
+  retArray['profitpt']=0
   
   for keyClientCode, classesTable in pairs( totals_t ) do
     
@@ -415,6 +429,10 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
     if ArrayOneClient['profitByTheorPrice'] ~= nil then
       retArray['profitByTheorPrice']=retArray['profitByTheorPrice'] + tonumber(ArrayOneClient['profitByTheorPrice'])
     end
+    if ArrayOneClient['profitpt'] ~= nil then
+      retArray['profitpt']=retArray['profitpt']   + tonumber(ArrayOneClient['profitpt'])
+    end
+
   end
   
   return retArray	
@@ -454,7 +472,10 @@ function MainTable:findTotalsByClass( classesTable, classCode )
 		  elseif keyParameter == 'profitByTheorPrice' then
             retArray['profitByTheorPrice']=valueParameter
 
-		  end
+          elseif keyParameter == 'PnLpt' then
+            retArray['profitpt']=valueParameter
+
+			end
         end  
       end
     end

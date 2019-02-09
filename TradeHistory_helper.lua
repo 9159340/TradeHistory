@@ -411,3 +411,17 @@ function Helper:getProfit(t,row)
   end
   return val  
 end
+
+--returns profit in points from table
+-- parameters
+--  t - table - main table of robot
+--  row - number - number of row in table
+function Helper:getProfitpt(t,row)
+  local res = false
+  local val = nil
+  res, val = check_nil(t, row, 'profitpt')
+  if res == true then
+	return 0
+  end
+  return val  
+end

@@ -41,6 +41,10 @@ function FIFO:get_deal_comment(brokerref)
 			--in that case we should discard it
 		end
 	end
+	if comment == 'mLK' then
+		--that's from android app. clear comment to proper work of algorithm
+		comment = ''
+	end
 	return comment
 end
 

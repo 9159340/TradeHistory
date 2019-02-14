@@ -122,6 +122,7 @@ function MainTable:createTable(caption)
   --collateral
   t:AddColumn("buyDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("buyDepo"))	--for seller (amount)
   t:AddColumn("sellDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("sellDepo"))	--for buyer (amount)
+  t:AddColumn("actualDepo",    QTABLE_DOUBLE_TYPE, self:col_vis("actualDepo"))	--total amount of collateral
   
   --fur debug - shows time of last update the row
   t:AddColumn("timeUpdate",  QTABLE_STRING_TYPE, self:col_vis("timeUpdate"))     
@@ -169,9 +170,17 @@ function MainTable:show_collateral(par_table, row)
 			end
 			local qty = tonumber(quantity_col.image)
 
-			par_table:SetValue(row, 'buyDepo', helper:math_round( helper:buy_depo(class, sec) * qty, 2))
-			par_table:SetValue(row, 'sellDepo', helper:math_round( helper:sell_depo(class, sec) * qty, 2))
-		
+			par_table:SetValue(row, 'buyDepo', helper:math_round( helper:buy_depo(class, sec) * qty, 0))
+			par_table:SetValue(row, 'sellDepo', helper:math_round( helper:sell_depo(class, sec) * qty, 0))
+			
+			local direction = par_table:GetValue(row,'operation')
+			--message(direction)
+			if direction.image == 'buy' then
+				par_table:SetValue(row, 'actualDepo', helper:math_round( helper:buy_depo(class, sec) * qty, 0))
+			else
+				par_table:SetValue(row, 'actualDepo', helper:math_round( helper:sell_depo(class, sec) * qty, 0))
+			end			
+			
 		end
 	end
 end
@@ -224,13 +233,13 @@ function MainTable:recalc_table( par_table, totals_t )
         local account = par_table:GetValue(row,'account').image
         local classCode = par_table:GetValue(row,'classCode').image
         local accrual = tonumber(par_table:GetValue(row,'accrual').image)
-        local buyDepo = tonumber(par_table:GetValue(row,'buyDepo').image)
+        local actualDepo = tonumber(par_table:GetValue(row,'actualDepo').image)
 		local amount = tonumber(par_table:GetValue(row,'amount').image)
         local profitByTheorPrice = tonumber(par_table:GetValue(row,'profitByTheorPrice').image)
 		local PnL = helper:getProfitpt(par_table,row)
         local PnLrub = helper:getProfit(par_table,row)
 
-        maintable:addValuesToTotalsTable( totals_t, account, classCode, buyDepo, PnLrub, accrual, amount, profitByTheorPrice, PnL )
+        maintable:addValuesToTotalsTable( totals_t, account, classCode, actualDepo, PnLrub, accrual, amount, profitByTheorPrice, PnL )
       end	
     
     end
@@ -248,7 +257,7 @@ function MainTable:recalc_table( par_table, totals_t )
         totalsArray = maintable:findTotalsByClientAndClass(totals_t, clientCode, classCode)
 
         par_table:SetValue(row, 'profit', tostring( totalsArray['profit'] )) 
-        par_table:SetValue(row, 'buyDepo', tostring( totalsArray['buyDepo'] )) 
+        par_table:SetValue(row, 'actualDepo', tostring( totalsArray['actualDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( totalsArray['accrual'] )) 
 		par_table:SetValue(row, 'amount', tostring( totalsArray['amount'] ))
 		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))
@@ -266,7 +275,7 @@ function MainTable:recalc_table( par_table, totals_t )
         grandTotalsArray = maintable:findGrandTotalsByClass(totals_t, classCode)
 
         par_table:SetValue(row, 'profit', tostring( grandTotalsArray['profit'] )) 
-        par_table:SetValue(row, 'buyDepo', tostring( grandTotalsArray['buyDepo'] )) 
+        par_table:SetValue(row, 'actualDepo', tostring( grandTotalsArray['actualDepo'] )) 
         par_table:SetValue(row, 'accrual', tostring( grandTotalsArray['accrual'] )) 
 		par_table:SetValue(row, 'amount', tostring( grandTotalsArray['amount'] ))
 		par_table:SetValue(row, 'profitByTheorPrice', tostring( totalsArray['profitByTheorPrice'] ))		
@@ -392,7 +401,7 @@ end
 
 -- searches rows in totals table and evaluates total by class code. filter criteria: only classCode
 -- returns: table with fields:
---  * buyDepo
+--  * actualDepo
 --  * profit 
 --  * accrual 
 --  * amount
@@ -401,7 +410,7 @@ end
 function MainTable:findGrandTotalsByClass( totals_t, classCode )
 	
   local retArray = {}
-  retArray['buyDepo']=0
+  retArray['actualDepo']=0
   retArray['profit']=0
   retArray['accrual']=0
   retArray['amount']=0
@@ -414,8 +423,8 @@ function MainTable:findGrandTotalsByClass( totals_t, classCode )
 
     --message('class '..classCode..' client '.. keyClientCode .. ' profit ' .. tostring(ArrayOneClient['profit']))
 
-    if ArrayOneClient['buyDepo'] ~= nil then
-      retArray['buyDepo']=retArray['buyDepo'] + tonumber(ArrayOneClient['buyDepo'])
+    if ArrayOneClient['actualDepo'] ~= nil then
+      retArray['actualDepo']=retArray['actualDepo'] + tonumber(ArrayOneClient['actualDepo'])
     end
     if ArrayOneClient['profit'] ~= nil then
       retArray['profit']=retArray['profit']   + tonumber(ArrayOneClient['profit'])
@@ -441,7 +450,7 @@ end
 -- searches rows in 'classesTable' table, which is derivative from totals_t.
 -- this table contains all classes within one client.
 -- returns: table with fields:
---  * buyDepo
+--  * actualDepo
 --  * profit 
 --  * accrual 
 --  * amount
@@ -458,7 +467,7 @@ function MainTable:findTotalsByClass( classesTable, classCode )
         for keyParameter, valueParameter in pairs( parametersTable ) do
   
           if keyParameter == 'collateral' then
-            retArray['buyDepo']=valueParameter
+            retArray['actualDepo']=valueParameter
           
           elseif keyParameter == 'PnL' then
             retArray['profit']=valueParameter

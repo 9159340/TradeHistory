@@ -83,6 +83,7 @@ function Settings:Init()
 	self.columns_visibility["close_price_step_price"]=false
 	self.columns_visibility["buyDepo"]=false
 	self.columns_visibility["sellDepo"]=false
+	self.columns_visibility["actualDepo"]=true
 	self.columns_visibility["timeUpdate"]=false
 	self.columns_visibility["optionType"]=true
 	self.columns_visibility["expiration"]=true
@@ -107,7 +108,7 @@ function Settings:Init()
 	self.columns_width['tradeNum'] = 5
 	self.columns_width['operation'] = 5
 	self.columns_width['quantity'] = 7
-	self.columns_width['amount'] = 7
+	self.columns_width['amount'] = 8
 	self.columns_width['priceOpen'] = 10 
 	self.columns_width['dateClose'] = 4
 	self.columns_width['timeClose'] = 4
@@ -123,7 +124,8 @@ function Settings:Init()
 	self.columns_width['close_price_step'] = 7
 	self.columns_width['close_price_step_price'] = 7
 	self.columns_width['buyDepo'] = 9
-	self.columns_width['sellDepo'] = 7
+	self.columns_width['sellDepo'] = 9
+	self.columns_width['actualDepo'] = 9
 	self.columns_width['timeUpdate'] = 7
 	self.columns_width['optionType'] = 5
 	self.columns_width['expiration'] = 10
@@ -163,6 +165,7 @@ function Settings:precision_table()
 	
 	-- FORTS
 	precision_table['EDH9'] = 4
+	precision_table['MMH9'] = 2
 	
 	-- CETS
 	precision_table['USD000UTSTOM'] = 4

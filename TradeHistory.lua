@@ -26,6 +26,7 @@ dofile (getScriptPath() .. "\\TradeHistory_details.lua")
 dofile (getScriptPath() .. "\\TradeHistory_table.lua") --class maintable
 dofile (getScriptPath() .. "\\TradeHistory_closed.lua")
 dofile (getScriptPath() .. "\\TradeHistory_deals.lua")
+dofile (getScriptPath() .. "\\TradeHistory_service.lua")
 
 --эмуляция контекстного меню
 dofile (getScriptPath() .. "\\TradeHistory_actions.lua")
@@ -54,6 +55,7 @@ maintable={} --maintable.t - главная таблица робота
 closedpos={} --класс для отображения таблицы закрытых позиций
 deals={}
 actions={} --контекстное меню
+service={}
 
 -- Константы --
 -- Глобальные переменные --
@@ -347,6 +349,9 @@ function OnInit(s)
 	deals= Deals()
 	deals:Init()
 	
+	service=Service()
+	service:Init()
+	
 	actions = Actions()
 	actions:Init()  
 	
@@ -629,9 +634,10 @@ function main()
   SetTableNotificationCallback (maintable.t.t_id, f_cb)
 
   --эта процедура помещает пропущенные сделки в фифо. сделки заполнять вручную! (в функции create_table_trades())
-  --process_fifo_manual_deals()
-  
-  --pro_cess_fifo_manual_deals_from_table_deals() --это какая-то разовая потребность была
+  --[[
+  service:process_fifo_manual_deals()
+  is_run = false
+  --]]
   
   while is_run do  
     --обновим PnL в главной таблице
@@ -649,85 +655,4 @@ function main()
 end
 
 
-
---import manual trades to fifo
-
---creates manual table
-function create_table_trades()
-
-	--trades[ 11 ] ['flags'] = 64 --buy
-	--trades[ 11 ] ['flags'] = 68 --sell
-
-	local trades = {}
-
-	local num = 1
-
-	trades[ num]  = {}			
-	trades[ num ] ['trade_num'] 			= 9997			--decimal
-	trades[ num ] ['order_num'] 			= 0				--decimal
-	trades[ num ] ['brokerref'] 			= ''			--do not fill
-	trades[ num ] ['price'] 				= 61.96 		--decimal
-	trades[ num ] ['qty'] 					= 1				--decimal
-	trades[ num ] ['value'] 				= 61960			--decimal
-	trades[ num ] ['flags'] 				= 68			--decimal 64 buy/ 68 sell
-	trades[ num ] ['client_code'] 			= 'asf'
-	trades[ num ] ['trade_currency'] 		= 'SUR'			
-	trades[ num ] ['sec_code'] 				= 'asf'			
-	trades[ num ] ['class_code'] 			= 'CETS'			
-	trades[ num ] ['exchange_comission'] 	= 0				--decimal
-	trades[ num ] ['trans_id'] 				= 0				--decimal
-	trades[ num ] ['accruedint'] 			= 0				--decimal
-	trades[ num ] ['datetime'] 				= {day=25, month=10,year=2018,hour=10,min=00,sec=07 }
-	trades[ num ] ['operation'] 			= 'sell' 		--this field is not present in original trade table. 
-	trades[ num ] ['account'] 				= 'asdf'		--string, depo code
-	
-	
-	
-	return trades			
-end
-
---функция проводит по фифо искусственные сделки из таблицы. см. функцию create_table_trades()
-function process_fifo_manual_deals()
-
-	local trades = create_table_trades()
-	
-	--тут одна проблема останется. в фифо мы получаем стоимость шага цены вот так:
-    --getParamEx (trade.class_code, trade.sec_code, 'STEPPRICE').param_value..
-	--т.е. при загрузке пропущенных сделок он будет неверный. хотя, если грузить сделке вечерки следующим утром, то наверное он не поменяется... проверить бы
-	--29 /11/ 16
-	--стоимость шага = 
-	--6.537830
-	--RTS
-	--13.075660
-	--вгоню ее руками
-
-	local i=0
-	for key, trade in pairs ( trades ) do
-		fifo:makeFifo(trade)
-		i=i+1
-		message(tostring(i)..' trade has been processed. # ' .. trade.trade_num)
-	end		
-end
-
---trades[ 11 ] ['flags'] = 64 --покупка
---trades[ 11 ] ['flags'] = 68 --продажа
-
---провести по фифо сделки, которые уже есть в базе. перед этим их модифицируем
-function pro_cess_fifo_manual_deals_from_table_deals()
-
-	local k = "'"
-	local sql = 'SELECT *  FROM	deals WHERE date = '..k..'2017-05-10'..k ..' AND trade_num = 0000000000 ORDER BY trade_num'
-
-	local i=1
-	for row in fifo.db:nrows(sql) do 
-	
-		row.datetime = {['day']=10, ['month']=5, ['year']=2017, ['hour']=10, ['min']=10, ['sec']=10}
-		row.brokerref = ''
-		
-		fifo:makeFifo(row)
-		i=i+1
-		message(row.trade_num..'-'..tostring(i))
-		
-	end		
-end
 
